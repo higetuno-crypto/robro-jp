@@ -1,9 +1,3 @@
 {
-  "regions": ["hnd1"],
-  "crons": [
-    {
-      "path": "/api/cron/fetch-games",
-      "schedule": "*/10 * * * *"
-    }
-  ]
+  "regions": ["hnd1"]
 }
