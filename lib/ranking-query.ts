@@ -82,7 +82,19 @@ export interface RankingResult {
   capturedAt: string | null;
 }
 
-export type RankingFilter = 'overall' | 'japanese';
+export type RankingFilter = 'overall' | 'japanese' | 'trending';
+
+/**
+ * 急上昇スコア：min〜maxのクリップをかけた「倍率上昇」。
+ * 小規模ゲームがたまたま2人→20人で10倍になる現象を抑えるため、
+ * min_playing を加えてスムージングする。
+ *
+ * growthScore = (current + K) / (previous + K)
+ *   K = 100  ← CCU 100人未満のノイズを潰す
+ * さらに current が低すぎるものは足切り（current >= 50）。
+ */
+const TRENDING_SMOOTHING_K = 100;
+const TRENDING_MIN_PLAYING = 50;
 
 /**
  * 指定フィルタで上位 limit 件のランキングを返す。
@@ -111,8 +123,23 @@ export async function getRanking(
     .sort((a, b) => b.playing - a.playing)
     .forEach((s, i) => prevRankMap.set(s.universe_id, i + 1));
 
-  // 最新の playing 降順で候補を作る
-  const sorted = latestSnaps.slice().sort((a, b) => b.playing - a.playing);
+  // prev playing lookup（trending計算用）
+  const prevPlayingMap = new Map<number, number>();
+  for (const s of prevSnaps) prevPlayingMap.set(s.universe_id, s.playing);
+
+  // 並び替え：trending の場合は growthScore 降順、それ以外は playing 降順
+  const sorted = latestSnaps.slice().sort((a, b) => {
+    if (filter === 'trending') {
+      const ga =
+        (a.playing + TRENDING_SMOOTHING_K) /
+        ((prevPlayingMap.get(a.universe_id) ?? a.playing) + TRENDING_SMOOTHING_K);
+      const gb =
+        (b.playing + TRENDING_SMOOTHING_K) /
+        ((prevPlayingMap.get(b.universe_id) ?? b.playing) + TRENDING_SMOOTHING_K);
+      return gb - ga;
+    }
+    return b.playing - a.playing;
+  });
 
   // games マスタを一括取得
   const gameMap = await fetchGames(
@@ -126,6 +153,7 @@ export async function getRanking(
     const g = gameMap.get(s.universe_id);
     if (!g) continue;
     if (filter === 'japanese' && !g.is_japanese) continue;
+    if (filter === 'trending' && s.playing < TRENDING_MIN_PLAYING) continue;
 
     const currentRank = rows.length + 1;
     const prevRank = prevRankMap.get(s.universe_id);
