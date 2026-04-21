@@ -40,7 +40,7 @@ export default async function GameDetailPage({
     : null;
 
   return (
-    <section className="px-3 py-3">
+    <section className="max-w-3xl mx-auto px-3 py-3">
       {/* パンくず */}
       <div className="text-[13px] text-muted-foreground mb-3">
         <Link href="/" className="hover:underline">
