@@ -1,15 +1,9 @@
 name: fetch-games-cron
 
-# Vercel Hobby プランは daily cron しか回せないため、GitHub Actions から
-# /api/cron/fetch-games を定期的に叩く。
-# トラフィック増やして Pro に上げるタイミングで vercel.json の crons を復活させ
-# ここを disable する（Actionsタブから手動でworkflow無効化可能）。
-
 on:
   schedule:
-    # 10分おき。GitHub Actions の cron は最短5分だが、ここはCLAUDE.md準拠で10分。
     - cron: '*/10 * * * *'
-  workflow_dispatch: # 手動トリガ可
+  workflow_dispatch:
 
 concurrency:
   group: fetch-games-cron
@@ -29,7 +23,6 @@ jobs:
             echo "::error::CRON_TARGET_URL or CRON_SECRET not set"
             exit 1
           fi
-          # -f で 4xx/5xx を失敗として扱う。--max-time でハング防止。
           http_code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
             --max-time 120 \
             -H "Authorization: Bearer $CRON_SECRET" \
