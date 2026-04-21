@@ -41,6 +41,8 @@
 - **日本語ファースト**：UIもデフォルトの並び順も、日本語ユーザーを中心に据える
 - **軽量・高速**：初回表示1秒以内。モバイル最優先
 - **誠実な数字**：Rolimonsなど他サイトのコピーではなく、自前で時系列を貯めて独自の「急上昇」を出す
+- **日本語ファースト**：公式Chartsの `country=JP` フィルタは認証必須で匿名APIからは使えないため、**`is_japanese` 判定を一次シグナル**として「日本で人気」を構築する。日本語タイトル・説明を持つゲームはJP ユーザー向けに作られている or JPユーザーが主ターゲット。他サイト（robloxgame.jp等）との差別化はリアルタイム性・時系列データ・UIの速さで勝負
+- **将来のJP実データ取得**：認証cookie運用（使い捨てアカウント）や、ブラウザヘッドレスでの取得は将来検討。まずは `is_japanese` ベースで立ち上げる
 - **拡張を前提**：**将来の機能（開発者登録、宣伝ポイント、企業宣伝、宣伝ランキング細分化）を最初から構造に織り込む**
 
 ---
@@ -49,7 +51,7 @@
 
 このサイトは**3種類**のページで構成される。それぞれUI思想が違う。**絶対に混ぜない**。
 
-### A. ランキングページ（/, /trending, /japanese）
+### A. ランキングページ（/, /trending, /categories, /new, /global）
 
 **思想：事実を淡々と提示する。編集者の意図を一切混ぜない。ニコニコ動画のランキングページが手本。**
 
@@ -85,10 +87,17 @@
 
 ```
 ヘッダー：[ランキング] [ピックアップ] [宣伝]  ← 宣伝はフェーズ6以降
-  ├─ ランキング配下タブ：[総合] [急上昇] [日本語]
+  ├─ ランキング配下タブ：
+  │     [日本で人気]（/ デフォルト）← 日本語ファースト原則の中核
+  │     [日本の急上昇]（/trending）
+  │     [カテゴリ別]（/categories）
+  │     [今週の新着]（/new）
+  │     [全世界総合]（/global）← 格下げ。日本ユーザーには副次的
   ├─ ピックアップ：単独ページ
   └─ 宣伝：配下タブ [総合] [企業] [ユーザー] [新着] など（将来）
 ```
+
+**重要**：ルート `/` は「日本で人気」。「全世界総合」は `/global` に格下げ。日本ユーザーが最初に見るのは日本で人気のゲーム。
 
 タブに異種を混ぜない。階層を上げて分離する。
 
@@ -103,6 +112,9 @@
 | グラフ | Recharts |
 | DB | Supabase (PostgreSQL) |
 | データ取得ジョブ | Vercel Cron (初期) → 負荷増大で n8n 移行 |
+| データソース（主） | Roblox公式 explore-api（`get-sort-content`）：`top-playing-now` / `top-trending` / `up-and-coming` / `top-revisited` などの全世界ソートをunionして上位500件を取得 |
+| データソース（補） | Roblox公式 games/v1 API（詳細・CCU詳細）、Roblox公式 thumbnails API |
+| 日本ゲーム抽出 | `japanese-detector.ts`（タイトル・説明の日本語スコア）。country=JP フィルタは認証必須で使えないため、この判定でJP向けゲームを近似 |
 | ホスティング | Vercel (東京リージョン) |
 | ドメイン | roblo.fortunep.net |
 
@@ -119,9 +131,13 @@ roblo-jp/
 │   ├── layout.tsx                    # ヘッダーナビ
 │   ├── (ranking)/
 │   │   ├── layout.tsx                # ランキング配下タブ
-│   │   ├── page.tsx                  # / 総合
-│   │   ├── trending/page.tsx
-│   │   └── japanese/page.tsx
+│   │   ├── page.tsx                  # / 日本で人気（デフォルト）
+│   │   ├── trending/page.tsx         # /trending 日本の急上昇
+│   │   ├── categories/
+│   │   │   ├── page.tsx              # /categories カテゴリ一覧
+│   │   │   └── [slug]/page.tsx       # /categories/roleplay など
+│   │   ├── new/page.tsx              # /new 今週の新着
+│   │   └── global/page.tsx           # /global 全世界総合
 │   ├── featured/
 │   │   └── page.tsx                  # /featured ピックアップ
 │   ├── promoted/                     # フェーズ6以降
@@ -135,8 +151,9 @@ roblo-jp/
 │           └── fetch-games/route.ts
 ├── lib/
 │   ├── supabase.ts
-│   ├── roblox-api.ts
-│   ├── rolimons-api.ts
+│   ├── roblox-api.ts                 # games/v1 詳細取得
+│   ├── roblox-charts.ts              # 公式Charts スクレイピング（country=JP / 全世界）
+│   ├── rolimons-api.ts               # 全世界上位リスト補完用（従属）
 │   ├── japanese-detector.ts
 │   └── promotion/                    # フェーズ6以降
 │       ├── pricing.ts                # 料金計算
@@ -172,6 +189,9 @@ CREATE TABLE games (
   thumbnail_url TEXT,
   is_japanese BOOLEAN DEFAULT FALSE,
   japanese_score REAL DEFAULT 0,
+  -- カテゴリ（Roblox 詳細API由来）
+  genre_l1 TEXT,               -- 表示用：'Roleplay & Avatar Sim' など
+  genre_slug TEXT,             -- URL用：'roleplay_and_avatar_sim' など
   -- 将来の拡張用：開発者登録機能で使う
   owner_account_id BIGINT,    -- accountsテーブルへのFK（フェーズ6以降）
   is_verified_by_us BOOLEAN DEFAULT FALSE,  -- 自前認証
@@ -181,8 +201,10 @@ CREATE TABLE games (
 CREATE INDEX idx_games_is_japanese ON games(is_japanese);
 CREATE INDEX idx_games_updated_at ON games(updated_at);
 CREATE INDEX idx_games_owner ON games(owner_account_id);
+CREATE INDEX idx_games_first_seen_at ON games(first_seen_at DESC);  -- 今週の新着用
+CREATE INDEX idx_games_genre_slug ON games(genre_slug);              -- カテゴリ別ランキング用
 
--- 時系列スナップショット
+-- 時系列スナップショット（CCU等の数値）
 CREATE TABLE game_snapshots (
   universe_id BIGINT REFERENCES games(universe_id),
   captured_at TIMESTAMPTZ NOT NULL,
@@ -192,6 +214,16 @@ CREATE TABLE game_snapshots (
   PRIMARY KEY (universe_id, captured_at)
 );
 CREATE INDEX idx_snapshots_captured_at ON game_snapshots(captured_at DESC);
+
+-- NOTE: 当初 chart_rankings テーブルで source 別に保存する設計だったが、
+-- explore-api にカテゴリ別 sort がなく、代わりに games.genre_l1 / genre_slug（Roblox詳細API由来）
+-- でカテゴリ分類できることが判明したため、chart_rankings テーブルは不要になった。
+-- ランキングはすべて game_snapshots + games の WHERE 条件で表現する：
+--   全世界総合  : games 全件、playing 降順
+--   日本で人気  : games.is_japanese = true、playing 降順
+--   急上昇      : 前スナップショットとの playing 比率
+--   カテゴリ別  : games.genre_slug = '<slug>'、playing 降順
+--   今週の新着  : games.first_seen_at >= now() - '7 days'、playing 降順
 
 -- ピックアップ（編集者手動）
 CREATE TABLE featured_games (
@@ -334,37 +366,41 @@ CREATE TABLE pricing_config (
 **完了条件**：`pnpm dev` で localhost:3000 が表示される。
 
 ### フェーズ1：データ取得パイプライン
-**ゴール**：5〜10分ごとに上位500件のCCUが蓄積される。
+**ゴール**：5〜10分ごとに「日本Chart」「全世界Chart」「カテゴリ別Chart」のUniverseIdと順位、およびCCUが蓄積される。
 
-- [ ] `lib/rolimons-api.ts`：上位500件のUniverseIdリスト取得
-- [ ] `lib/roblox-api.ts`：100件ずつバッチ、バッチ間500msディレイ
+- [x] `lib/roblox-explore-api.ts`：公式 explore-api を叩き、複数sort（top-playing-now / top-trending / up-and-coming / top-revisited / カテゴリ別sort）をunionしてUniverseIdを取得
+  - **調査済み制約**：`country=JP` 相当のフィルタは匿名アクセスでは効かない（filter値は常に `all`）。日本ゲームは `is_japanese` 判定で近似
+- [ ] `lib/roblox-api.ts`：games/v1 でCCU/詳細を100件ずつ取得、バッチ間500msディレイ
+- [ ] `lib/rolimons-api.ts`：全世界上位リスト補完用（Charts取得が失敗した時のフォールバック）
 - [ ] `lib/japanese-detector.ts`：ルールベース判定
-- [ ] `app/api/cron/fetch-games/route.ts`：Rolimons → Roblox → Supabase upsert + snapshot insert
+- [ ] `app/api/cron/fetch-games/route.ts`：Charts取得 → 重複除去したUniverseIdでRoblox詳細取得 → `games` upsert + `game_snapshots` insert + `chart_rankings` insert
 - [ ] `CRON_SECRET` でBearer認証
 - [ ] `vercel.json` に `"*/10 * * * *"`
 
-**完了条件**：手動叩きで500件追加、2回目で重複エラーなし。
+**完了条件**：手動叩きで `chart_rankings` に `source='official_jp'` と `'official_global'` の行が両方入る。2回目で重複エラーなし。
 
-### フェーズ2：総合ランキング
-**ゴール**：最新スナップショットの `playing` 降順トップ100。
+### フェーズ2：日本で人気ランキング（デフォルト）
+**ゴール**：`/` に公式Charts(country=JP)の最新順位トップ100を表示。
 
-- [ ] `(ranking)/layout.tsx`：タブナビ
-- [ ] `(ranking)/page.tsx`：Server ComponentでJOIN
+- [ ] `(ranking)/layout.tsx`：タブナビ（日本で人気 / 急上昇 / カテゴリ / 新着 / 全世界）
+- [ ] `(ranking)/page.tsx`：`chart_rankings` の最新 `source='official_jp'` をJOIN
 - [ ] `components/RankingRow.tsx`：全順位で見た目同じ
 - [ ] モバイル縦リスト、デスクトップテーブル
 - [ ] 更新時刻表示
 - [ ] `revalidate = 300`
 
-**完了条件**：1位と100位の見た目が順位バッジ以外同じ。
+**完了条件**：1位と100位の見た目が順位バッジ以外同じ。URLが `/` でJP Chartsが表示される。
 
-### フェーズ3：急上昇・日本語タブ
-**ゴール**：3種類のランキング。
+### フェーズ3：急上昇・カテゴリ別・今週の新着・全世界
+**ゴール**：5種類のランキング。**同じ `RankingRow` を使い回す**。
 
-- [ ] `/trending`：変化率計算
-- [ ] `/japanese`：`is_japanese=true` フィルタ
-- [ ] **同じ `RankingRow` を使い回す**
+- [ ] `/trending`：日本Chartsの順位変動（前回captureからのrank差分、新規=NEWバッジ）
+- [ ] `/categories`：カテゴリ一覧（公式Chartsのカテゴリslug列挙、テーブル化：`category_slots` などにマスタを置く）
+- [ ] `/categories/[slug]`：`source='official_category:<slug>'` で絞り込み
+- [ ] `/new`：`games.first_seen_at >= now() - interval '7 days'` を playing 降順で
+- [ ] `/global`：`source='official_global'` の最新順位
 
-**完了条件**：3URLで並び順が異なる。行の見た目は全ページ同一。
+**完了条件**：5URLで並び順が異なる。行の見た目は全ページ同一。
 
 ### フェーズ4：個別ゲームページ
 **ゴール**：詳細+24時間CCU推移グラフ。
@@ -412,8 +448,11 @@ CREATE TABLE pricing_config (
 
 ## 外部API使用上の注意
 
-- Rolimons API：1分に1〜2回まで
-- Roblox公式API：UniverseId 100件/req、バッチ間500ms
+- 公式 explore-api（主ソース）：`apis.roblox.com/explore-api/v1/get-sort-content`。1 sort あたり ~90件。複数sortをunionして500件を構築。10分に1回程度。User-Agent付与
+  - 使うsortId：`top-playing-now` / `top-trending` / `up-and-coming` / `top-revisited`、および将来のカテゴリsort
+  - `country_filter_v3` パラメータは匿名では反映されない（確認済）
+- Rolimons API：1分に1〜2回まで（フォールバック用途）
+- Roblox公式API（games/v1）：UniverseId 100件/req、バッチ間500ms
 - プロキシ禁止（rprxy.xyz等）
 - サムネはRoblox CDN直リンク
 

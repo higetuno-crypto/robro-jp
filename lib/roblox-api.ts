@@ -25,6 +25,9 @@ interface RobloxGameDetail {
   playing: number;
   visits: number;
   favoritedCount: number;
+  // ジャンル（カテゴリ別ランキングで使用）。旧 genre は legacy。
+  genre_l1?: string | null;              // 表示用：'Roleplay & Avatar Sim' など
+  untranslated_genre_l1?: string | null; // URL slug用：'roleplay_and_avatar_sim' など
 }
 
 interface GamesDetailResponse {

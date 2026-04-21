@@ -6,27 +6,27 @@ import { fetchFeatured } from '@/lib/featured-query';
 import { formatRelativeJa } from '@/lib/format';
 
 /**
- * 総合ランキング（/）
- * 最新スナップショットの playing 降順 TOP100。
+ * 日本で人気ランキング（/）← デフォルト
  *
- * CLAUDE.md：revalidate = 300（5分ごとの再生成）
+ * CLAUDE.md：
+ * - 日本語ファースト。ルートは「日本で人気」
+ * - 現状は is_japanese=true を一次シグナルとして近似
+ *   （Roblox公式 country=JP フィルタは匿名APIでは効かないため）
+ * - revalidate = 300
  *
- * フェーズ5で追加：トップページ上部に「ピックアップ」の導線ミニセクション。
- *  - ランキング本体とは視覚的に別物に見えるよう、カード3件まで + 区切り線
- *  - ピックアップが0件のときは丸ごと非表示
+ * トップページ上部に「ピックアップ」の導線ミニセクション。
  */
 export const revalidate = 300;
 
-export default async function OverallRankingPage() {
+export default async function JapanPopularRankingPage() {
   const supabase = createBrowserClient();
   const [{ rows, capturedAt }, featured] = await Promise.all([
-    getRanking(supabase, 'overall', 100),
+    getRanking(supabase, 'japanese', 100),
     fetchFeatured(supabase, 3),
   ]);
 
   return (
     <section>
-      {/* ピックアップミニセクション（0件なら非表示） */}
       {featured.length > 0 && (
         <div className="border-b border-border px-3 py-3">
           <div className="flex items-baseline justify-between mb-2">
@@ -72,8 +72,8 @@ export default async function OverallRankingPage() {
 
       <div className="px-3 py-2 text-[13px] text-muted-foreground">
         {rows.length > 0
-          ? `${formatRelativeJa(capturedAt)} ・ 総合 TOP${rows.length}`
-          : 'データ収集中です。cron が一度回れば表示されます。'}
+          ? `${formatRelativeJa(capturedAt)} ・ 日本で人気 TOP${rows.length}`
+          : '日本語ゲームをまだ検出していません。データ収集が進むと表示されます。'}
       </div>
 
       <div>

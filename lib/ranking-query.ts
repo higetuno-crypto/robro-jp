@@ -21,6 +21,9 @@ interface GameRow {
   creator_name: string | null;
   thumbnail_url: string | null;
   is_japanese: boolean;
+  genre_slug: string | null;
+  genre_l1: string | null;
+  first_seen_at: string | null;
 }
 
 async function fetchLatestCapturedAt(supabase: SupabaseClient): Promise<string | null> {
@@ -69,7 +72,7 @@ async function fetchGames(
   if (universeIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('games')
-    .select('universe_id, name, creator_name, thumbnail_url, is_japanese')
+    .select('universe_id, name, creator_name, thumbnail_url, is_japanese, genre_slug, genre_l1, first_seen_at')
     .in('universe_id', universeIds);
   if (error) throw error;
   const map = new Map<number, GameRow>();
@@ -82,7 +85,14 @@ export interface RankingResult {
   capturedAt: string | null;
 }
 
-export type RankingFilter = 'overall' | 'japanese' | 'trending';
+export type RankingFilter = 'overall' | 'japanese' | 'trending' | 'new' | 'category';
+
+export interface RankingOptions {
+  /** category フィルタ時の genre_slug */
+  categorySlug?: string;
+  /** new フィルタ時の期間（日数、デフォルト7） */
+  newWithinDays?: number;
+}
 
 /**
  * 急上昇スコア：min〜maxのクリップをかけた「倍率上昇」。
@@ -103,7 +113,8 @@ const TRENDING_MIN_PLAYING = 50;
 export async function getRanking(
   supabase: SupabaseClient,
   filter: RankingFilter = 'overall',
-  limit = 100
+  limit = 100,
+  options: RankingOptions = {}
 ): Promise<RankingResult> {
   const latest = await fetchLatestCapturedAt(supabase);
   if (!latest) return { rows: [], capturedAt: null };
@@ -147,6 +158,14 @@ export async function getRanking(
     sorted.map((s) => s.universe_id)
   );
 
+  // new フィルタの閾値（UTC基準、日数前）
+  const newCutoff = (() => {
+    const days = options.newWithinDays ?? 7;
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - days);
+    return d.toISOString();
+  })();
+
   // フィルタ適用→順位付け→limit
   const rows: RankingRowData[] = [];
   for (const s of sorted) {
@@ -154,6 +173,13 @@ export async function getRanking(
     if (!g) continue;
     if (filter === 'japanese' && !g.is_japanese) continue;
     if (filter === 'trending' && s.playing < TRENDING_MIN_PLAYING) continue;
+    if (filter === 'category') {
+      if (!options.categorySlug) continue;
+      if (g.genre_slug !== options.categorySlug) continue;
+    }
+    if (filter === 'new') {
+      if (!g.first_seen_at || g.first_seen_at < newCutoff) continue;
+    }
 
     const currentRank = rows.length + 1;
     const prevRank = prevRankMap.get(s.universe_id);
@@ -176,4 +202,42 @@ export async function getRanking(
   }
 
   return { rows, capturedAt: latest };
+}
+
+export interface CategorySummary {
+  slug: string;
+  label: string;     // genre_l1 表示名
+  gameCount: number; // そのカテゴリのゲーム数
+}
+
+/**
+ * /categories 一覧ページ用：DB に蓄積されている genre_slug の一覧を返す。
+ * ゲーム件数の多い順。
+ */
+export async function getCategorySummaries(
+  supabase: SupabaseClient
+): Promise<CategorySummary[]> {
+  const { data, error } = await supabase
+    .from('games')
+    .select('genre_slug, genre_l1')
+    .not('genre_slug', 'is', null);
+  if (error) throw error;
+
+  const counts = new Map<string, { label: string; count: number }>();
+  for (const row of (data ?? []) as { genre_slug: string | null; genre_l1: string | null }[]) {
+    if (!row.genre_slug) continue;
+    const existing = counts.get(row.genre_slug);
+    if (existing) {
+      existing.count++;
+    } else {
+      counts.set(row.genre_slug, {
+        label: row.genre_l1 ?? row.genre_slug,
+        count: 1,
+      });
+    }
+  }
+
+  return Array.from(counts.entries())
+    .map(([slug, v]) => ({ slug, label: v.label, gameCount: v.count }))
+    .sort((a, b) => b.gameCount - a.gameCount);
 }

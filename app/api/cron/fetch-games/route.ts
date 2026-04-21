@@ -65,6 +65,8 @@ export async function GET(request: Request) {
         thumbnail_url: g.thumbnailUrl,
         is_japanese: j.isJapanese,
         japanese_score: j.score,
+        genre_l1: g.genre_l1 ?? null,
+        genre_slug: g.untranslated_genre_l1 ?? null,
         updated_at: capturedAt,
       };
     });
