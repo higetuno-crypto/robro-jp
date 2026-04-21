@@ -8,7 +8,7 @@ import { getCategorySummaries } from '@/lib/ranking-query';
  * DB に蓄積された genre_slug の一覧を表示。各スラグへリンク。
  * ゲーム件数の多い順。装飾は控えめ（ランキング原則に準拠）。
  */
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function CategoriesIndexPage() {
   const supabase = createBrowserClient();

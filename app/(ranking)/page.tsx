@@ -20,10 +20,17 @@ export const revalidate = 300;
 
 export default async function JapanPopularRankingPage() {
   const supabase = createBrowserClient();
-  const [{ rows, capturedAt }, featured] = await Promise.all([
+  const [jpRanking, featured] = await Promise.all([
     getRanking(supabase, 'japanese', 100),
     fetchFeatured(supabase, 3),
   ]);
+
+  // フォールバック：日本語ゲームが検出されていないときは全世界総合を表示
+  // （初回アクセスでも「データ収集中」になって手触りが悪いのを回避）
+  const usingFallback = jpRanking.rows.length === 0;
+  const { rows, capturedAt } = usingFallback
+    ? await getRanking(supabase, 'overall', 100)
+    : jpRanking;
 
   return (
     <section>
@@ -71,9 +78,11 @@ export default async function JapanPopularRankingPage() {
       )}
 
       <div className="px-3 py-2 text-[13px] text-muted-foreground">
-        {rows.length > 0
-          ? `${formatRelativeJa(capturedAt)} ・ 日本で人気 TOP${rows.length}`
-          : '日本語ゲームをまだ検出していません。データ収集が進むと表示されます。'}
+        {rows.length === 0
+          ? 'データ収集中です。cron が一度回れば表示されます。'
+          : usingFallback
+          ? `${formatRelativeJa(capturedAt)} ・ 日本語ゲーム未検出のため暫定で全世界総合を表示中（TOP${rows.length}）`
+          : `${formatRelativeJa(capturedAt)} ・ 日本で人気 TOP${rows.length}`}
       </div>
 
       <div>
