@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase';
 import { fetchGameDetail, fetchRecentSnapshots } from '@/lib/game-detail-query';
 import { TrendChart } from '@/components/TrendChart';
+import { TagCloud } from '@/components/tag/TagCloud';
+import { TagPickerModal } from '@/components/tag/TagPickerModal';
+import { fetchAllTags, fetchGameTags } from '@/lib/tags';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
 
 /**
@@ -28,9 +31,17 @@ export default async function GameDetailPage({
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  const [game, snaps] = await Promise.all([
+  const [game, snaps, tagBundle, allTags] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
+    fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
+      console.error('[detail fetchGameTags]', e);
+      return { official: [], community: [] };
+    }),
+    fetchAllTags(supabase).catch((e) => {
+      console.error('[detail fetchAllTags]', e);
+      return [];
+    }),
   ]);
   if (!game) notFound();
 
@@ -96,6 +107,19 @@ export default async function GameDetailPage({
         <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
         <TrendChart data={snaps} />
       </div>
+
+      {/* タグ */}
+      {(tagBundle.official.length > 0 || tagBundle.community.length > 0 || allTags.length > 0) && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[13px] text-muted-foreground">タグ</div>
+            {allTags.length > 0 && (
+              <TagPickerModal universeId={universeId} tags={allTags} />
+            )}
+          </div>
+          <TagCloud official={tagBundle.official} community={tagBundle.community} />
+        </div>
+      )}
 
       {/* 概要 */}
       {game.description ? (
