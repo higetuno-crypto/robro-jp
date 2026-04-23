@@ -220,6 +220,164 @@ export async function castVote(
   return { voteCount: newCount, confidenceScore: newScore };
 }
 
+/** /tags 一覧用：タグマスタ + 集計（総得票数・紐付くゲーム数） */
+export interface TagStats extends TagMaster {
+  totalVoteCount: number;
+  gameCount: number;
+  createdAt: string | null;
+}
+
+export async function fetchTagsWithStats(
+  supabase: SupabaseClient
+): Promise<TagStats[]> {
+  const { data: tags, error: tErr } = await supabase
+    .from('tag_master')
+    .select('tag_id, tag_name, tag_type, tag_group, description, is_streaming_related, sort_order, created_at')
+    .eq('is_active', true);
+  if (tErr) throw tErr;
+
+  const { data: votes, error: vErr } = await supabase
+    .from('game_tag_votes')
+    .select('tag_id, vote_count');
+  if (vErr) throw vErr;
+
+  const agg = new Map<string, { total: number; games: number }>();
+  for (const v of (votes ?? []) as { tag_id: string; vote_count: number }[]) {
+    const cur = agg.get(v.tag_id) ?? { total: 0, games: 0 };
+    cur.total += v.vote_count;
+    if (v.vote_count > 0) cur.games += 1;
+    agg.set(v.tag_id, cur);
+  }
+
+  return ((tags ?? []) as Array<{
+    tag_id: string;
+    tag_name: string;
+    tag_type: TagType;
+    tag_group: TagGroup;
+    description: string | null;
+    is_streaming_related: boolean;
+    sort_order: number;
+    created_at: string | null;
+  }>).map((t) => {
+    const a = agg.get(t.tag_id) ?? { total: 0, games: 0 };
+    return {
+      ...mapTagRow(t),
+      totalVoteCount: a.total,
+      gameCount: a.games,
+      createdAt: t.created_at,
+    };
+  });
+}
+
+export async function fetchTagBySlug(
+  supabase: SupabaseClient,
+  tagId: string
+): Promise<TagStats | null> {
+  const { data, error } = await supabase
+    .from('tag_master')
+    .select('tag_id, tag_name, tag_type, tag_group, description, is_streaming_related, sort_order, created_at')
+    .eq('tag_id', tagId)
+    .eq('is_active', true)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const { data: votes, error: vErr } = await supabase
+    .from('game_tag_votes')
+    .select('vote_count')
+    .eq('tag_id', tagId);
+  if (vErr) throw vErr;
+
+  const rows = (votes ?? []) as { vote_count: number }[];
+  const totalVoteCount = rows.reduce((s, r) => s + r.vote_count, 0);
+  const gameCount = rows.filter((r) => r.vote_count > 0).length;
+
+  return {
+    ...mapTagRow(data as Parameters<typeof mapTagRow>[0]),
+    totalVoteCount,
+    gameCount,
+    createdAt: (data as { created_at: string | null }).created_at,
+  };
+}
+
+/** タグ詳細ページ用：該当タグを付けられたゲームを得票の確信度順で返す */
+export interface TagGameRow {
+  universeId: number;
+  name: string;
+  creatorName: string | null;
+  thumbnailUrl: string | null;
+  isJapanese: boolean;
+  playing: number | null;
+  voteCount: number;
+  confidenceScore: number;
+}
+
+export async function fetchGamesForTag(
+  supabase: SupabaseClient,
+  tagId: string,
+  limit = 50
+): Promise<TagGameRow[]> {
+  const { data, error } = await supabase
+    .from('game_tag_votes')
+    .select(
+      `universe_id, vote_count, confidence_score,
+       games!inner(universe_id, name, creator_name, thumbnail_url, is_japanese)`
+    )
+    .eq('tag_id', tagId)
+    .gt('vote_count', 0)
+    .order('confidence_score', { ascending: false })
+    .order('vote_count', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+
+  const rows = (data ?? []) as unknown as Array<{
+    universe_id: number;
+    vote_count: number;
+    confidence_score: number;
+    games: {
+      universe_id: number;
+      name: string;
+      creator_name: string | null;
+      thumbnail_url: string | null;
+      is_japanese: boolean;
+    };
+  }>;
+
+  if (rows.length === 0) return [];
+
+  // 現在CCUを別途最新スナップショットから引く
+  const latestSnap = await supabase
+    .from('game_snapshots')
+    .select('captured_at')
+    .order('captured_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const capturedAt = latestSnap.data?.captured_at ?? null;
+
+  const playingMap = new Map<number, number>();
+  if (capturedAt) {
+    const { data: snaps } = await supabase
+      .from('game_snapshots')
+      .select('universe_id, playing')
+      .eq('captured_at', capturedAt)
+      .in('universe_id', rows.map((r) => r.universe_id));
+    for (const s of (snaps ?? []) as { universe_id: number; playing: number }[]) {
+      playingMap.set(s.universe_id, s.playing);
+    }
+  }
+
+  return rows.map((r) => ({
+    universeId: r.universe_id,
+    name: r.games.name,
+    creatorName: r.games.creator_name,
+    thumbnailUrl: r.games.thumbnail_url,
+    isJapanese: r.games.is_japanese,
+    playing: playingMap.get(r.universe_id) ?? null,
+    voteCount: r.vote_count,
+    confidenceScore: r.confidence_score,
+  }));
+}
+
 function mapTagRow(row: {
   tag_id: string;
   tag_name: string;

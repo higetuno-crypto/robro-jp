@@ -17,6 +17,9 @@ export function SiteHeader() {
           <Link href="/" className="hover:underline">
             ランキング
           </Link>
+          <Link href="/tags" className="hover:underline">
+            タグ
+          </Link>
           <Link href="/featured" className="hover:underline">
             ピックアップ
           </Link>
