@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { TagMaster } from '@/lib/tags';
 
 /**
@@ -24,6 +25,7 @@ export function TagPickerModal({
   universeId: number;
   tags: TagMaster[];
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -96,13 +98,15 @@ export function TagPickerModal({
       setMessage(
         dup > 0
           ? `${ok}件反映しました（${dup}件は24時間以内に投票済み）`
-          : `${ok}件反映しました。反映には少し時間がかかる場合があります。`
+          : `${ok}件反映しました。`
       );
       setSelected(new Set());
-      // 反映を見せるためにリロード（簡易、後でSWR等に差し替え余地あり）
-      setTimeout(() => {
-        window.location.reload();
-      }, 1200);
+      // API側で revalidatePath 済み。router.refresh() でServer Componentを再取得し、
+      // TagCloud が最新の得票数で描画される（スクロール位置・client stateは保持）。
+      if (ok > 0) {
+        router.refresh();
+        setTimeout(() => setOpen(false), 800);
+      }
     } catch (e) {
       console.error(e);
       setMessage('通信エラー');

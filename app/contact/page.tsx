@@ -5,9 +5,7 @@ export const metadata: Metadata = {
   description: '本サイトへのお問い合わせ・掲載情報の削除申請窓口',
 };
 
-// NOTE: 暫定窓口は higetuno@gmail.com。専用エイリアス取得後に差し替え。
-
-const CONTACT_EMAIL = 'higetuno@gmail.com';
+const CONTACT_EMAIL = 'robranking.japan@gmail.com';
 
 export default function ContactPage() {
   const subjectRemoval = encodeURIComponent('[削除申請] ');

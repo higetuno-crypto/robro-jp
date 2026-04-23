@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createBrowserClient, createServiceClient } from '@/lib/supabase';
 import {
   fetchGameTags,
@@ -163,6 +164,13 @@ export async function POST(
       console.error('[api/tags POST] castVote', e);
       return NextResponse.json({ error: 'vote failed' }, { status: 500 });
     }
+  }
+
+  // 投票が1件でも反映された場合、該当ゲーム詳細ページのISRキャッシュを破棄。
+  // これにより Modal 側の router.refresh() で最新タグが即時表示される。
+  const hasChanged = results.some((r) => r.status === 'ok');
+  if (hasChanged) {
+    revalidatePath(`/game/${universeId}`);
   }
 
   return NextResponse.json({ universe_id: universeId, results });
