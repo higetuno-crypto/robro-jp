@@ -3,6 +3,7 @@ import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 
 /**
  * 日本語ファースト設計のため、本文フォントは Noto Sans JP を採用。
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="antialiased min-h-screen bg-background">
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
