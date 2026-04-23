@@ -210,7 +210,7 @@ export function TagPickerModal({
                 disabled={selected.size === 0 || submitting}
                 className="text-[13px] px-3 py-1.5 bg-foreground text-background disabled:opacity-40"
               >
-                {submitting ? '送信中…' : '投票する'}
+                {submitting ? '送信中…' : 'タグを付ける'}
               </button>
             </div>
           </div>

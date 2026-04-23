@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RankingRowData } from '@/types/game';
+import { genreLabelJa } from '@/lib/genre-labels';
 
 /**
  * ランキング取得クエリ（Server Component 専用）
@@ -231,7 +232,7 @@ export async function getCategorySummaries(
       existing.count++;
     } else {
       counts.set(row.genre_slug, {
-        label: row.genre_l1 ?? row.genre_slug,
+        label: genreLabelJa(row.genre_slug, row.genre_l1),
         count: 1,
       });
     }

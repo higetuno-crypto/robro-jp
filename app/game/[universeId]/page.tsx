@@ -91,23 +91,6 @@ export default async function GameDetailPage({
         </div>
       </div>
 
-      {/* 現在CCU */}
-      <div className="mt-4 flex items-baseline gap-2">
-        <div className="text-[13px] text-muted-foreground">現在CCU</div>
-        <div className="text-[20px] tabular-nums font-medium">
-          {latest ? formatNumber(latest.playing) : '-'}
-        </div>
-        <div className="text-[12px] text-muted-foreground ml-auto">
-          {latest ? formatRelativeJa(latest.capturedAt) : ''}
-        </div>
-      </div>
-
-      {/* 24hグラフ */}
-      <div className="mt-2">
-        <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
-        <TrendChart data={snaps} />
-      </div>
-
       {/* タグ */}
       {(tagBundle.official.length > 0 || tagBundle.community.length > 0 || allTags.length > 0) && (
         <div className="mt-4">
@@ -120,16 +103,6 @@ export default async function GameDetailPage({
           <TagCloud official={tagBundle.official} community={tagBundle.community} />
         </div>
       )}
-
-      {/* 概要 */}
-      {game.description ? (
-        <div className="mt-4">
-          <div className="text-[13px] text-muted-foreground mb-1">概要</div>
-          <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-            {game.description}
-          </p>
-        </div>
-      ) : null}
 
       {/* 公式Robloxリンク */}
       <div className="mt-5">
@@ -147,6 +120,33 @@ export default async function GameDetailPage({
             Robloxリンクは未取得です。
           </span>
         )}
+      </div>
+
+      {/* 概要 */}
+      {game.description ? (
+        <div className="mt-5">
+          <div className="text-[13px] text-muted-foreground mb-1">概要</div>
+          <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
+            {game.description}
+          </p>
+        </div>
+      ) : null}
+
+      {/* 現在CCU */}
+      <div className="mt-5 flex items-baseline gap-2">
+        <div className="text-[13px] text-muted-foreground">現在CCU</div>
+        <div className="text-[20px] tabular-nums font-medium">
+          {latest ? formatNumber(latest.playing) : '-'}
+        </div>
+        <div className="text-[12px] text-muted-foreground ml-auto">
+          {latest ? formatRelativeJa(latest.capturedAt) : ''}
+        </div>
+      </div>
+
+      {/* 24hグラフ */}
+      <div className="mt-2">
+        <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
+        <TrendChart data={snaps} />
       </div>
     </section>
   );
