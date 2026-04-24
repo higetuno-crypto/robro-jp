@@ -181,7 +181,7 @@ export async function castVote(
     universeId: number;
     tagId: string;
     fingerprint: string;
-    accountId?: number | null;
+    accountId?: string | null;
   }
 ): Promise<{ voteCount: number; confidenceScore: number }> {
   const { universeId, tagId, fingerprint, accountId } = params;

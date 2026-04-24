@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createBrowserClient, createServiceClient } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/supabase-ssr';
 import {
   fetchGameTags,
   hasRecentVote,
@@ -64,6 +65,13 @@ export async function POST(
   if (universeId === null) {
     return NextResponse.json({ error: 'invalid universeId' }, { status: 400 });
   }
+
+  // ログイン必須（サイト閲覧はログイン不要だが、投票はログインユーザーのみ）
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: 'login required' }, { status: 401 });
+  }
+  const accountId = user.id;
 
   let body: unknown;
   try {
@@ -153,6 +161,7 @@ export async function POST(
         universeId,
         tagId,
         fingerprint,
+        accountId,
       });
       results.push({
         tag_id: tagId,

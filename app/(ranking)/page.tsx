@@ -4,6 +4,7 @@ import { getRanking } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { fetchFeatured } from '@/lib/featured-query';
 import { formatRelativeJa } from '@/lib/format';
+import { PurposePicker } from '@/components/PurposePicker';
 
 /**
  * 日本で人気ランキング（/）← デフォルト
@@ -34,6 +35,8 @@ export default async function JapanPopularRankingPage() {
 
   return (
     <section>
+      <PurposePicker />
+
       {featured.length > 0 && (
         <div className="border-b border-border px-3 py-3">
           <div className="flex items-baseline justify-between mb-2">

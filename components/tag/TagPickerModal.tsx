@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import type { TagMaster } from '@/lib/tags';
+import { createSupabaseClientClient } from '@/lib/supabase-browser';
 
 /**
  * タグ投票モーダル（client）。
@@ -26,11 +27,28 @@ export function TagPickerModal({
   tags: TagMaster[];
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseClientClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setIsLoggedIn(!!data.user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const loginHref = `/login?next=${encodeURIComponent(pathname ?? '/')}`;
 
   // 公式＋ユーザー選択式、グループ別にまとめる
   const grouped = useMemo(() => {
@@ -82,6 +100,10 @@ export function TagPickerModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tag_ids: Array.from(selected) }),
       });
+      if (res.status === 401) {
+        setMessage('ログインが必要です。');
+        return;
+      }
       if (res.status === 429) {
         setMessage('投票しすぎです。時間をあけて再度お試しください。');
         return;
@@ -125,12 +147,25 @@ export function TagPickerModal({
     genre: 'ジャンル',
   };
 
+  if (isLoggedIn === false) {
+    return (
+      <a
+        href={loginHref}
+        className="inline-flex items-center px-3 py-1.5 text-[13px] border border-foreground hover:bg-muted"
+        title="タグ投票にはログインが必要です"
+      >
+        タグを付ける（要ログイン）
+      </a>
+    );
+  }
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center px-3 py-1.5 text-[13px] border border-foreground hover:bg-muted"
+        disabled={isLoggedIn === null}
+        className="inline-flex items-center px-3 py-1.5 text-[13px] border border-foreground hover:bg-muted disabled:opacity-40"
       >
         タグを付ける
       </button>
