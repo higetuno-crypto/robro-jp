@@ -113,6 +113,10 @@ export default async function AdminGameDetailPage({
           <Link href={`/game/${universeId}`} className="underline">
             公開ページ
           </Link>
+          {' / '}
+          <Link href={`/admin/stream-meta/${universeId}`} className="underline">
+            配信メタを編集
+          </Link>
         </p>
       </section>
 

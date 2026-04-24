@@ -6,6 +6,8 @@ import { TrendChart } from '@/components/TrendChart';
 import { TagCloud } from '@/components/tag/TagCloud';
 import { TagPickerModal } from '@/components/tag/TagPickerModal';
 import { fetchAllTags, fetchGameTags } from '@/lib/tags';
+import { fetchStreamingMeta } from '@/lib/streaming';
+import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
 
 /**
@@ -31,7 +33,7 @@ export default async function GameDetailPage({
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  const [game, snaps, tagBundle, allTags] = await Promise.all([
+  const [game, snaps, tagBundle, allTags, streamingMeta] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
     fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
@@ -41,6 +43,10 @@ export default async function GameDetailPage({
     fetchAllTags(supabase).catch((e) => {
       console.error('[detail fetchAllTags]', e);
       return [];
+    }),
+    fetchStreamingMeta(supabase, universeId).catch((e) => {
+      console.error('[detail fetchStreamingMeta]', e);
+      return null;
     }),
   ]);
   if (!game) notFound();
@@ -142,6 +148,11 @@ export default async function GameDetailPage({
           {latest ? formatRelativeJa(latest.capturedAt) : ''}
         </div>
       </div>
+
+      {/* 配信者向け情報（メタ存在時のみ） */}
+      {streamingMeta && (
+        <StreamMetaPanel meta={streamingMeta} gameName={game.name} />
+      )}
 
       {/* 24hグラフ */}
       <div className="mt-2">

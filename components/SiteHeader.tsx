@@ -25,6 +25,9 @@ export async function SiteHeader() {
           <Link href="/" className="hover:underline">
             ランキング
           </Link>
+          <Link href="/stream" className="hover:underline">
+            配信
+          </Link>
           <Link href="/tags" className="hover:underline">
             タグ
           </Link>

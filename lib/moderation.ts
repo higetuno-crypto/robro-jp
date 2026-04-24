@@ -22,6 +22,9 @@ const BLOCK_WORDS: readonly string[] = [
   '安全に配信できます',
   '著作権的に問題ありません',
   '絶対バズる',
+  '必ず盛り上がります',
+  '子ども向けです',
+  '子供向けです',
   '公式',
   '公認',
   'パートナー',
@@ -52,6 +55,8 @@ const REPLACE_WORDS: ReadonlyArray<{ from: string; to: string; why: string }> = 
   { from: '絶対バズる',       to: '配信映えしやすい',   why: '予言でなく傾向表現に' },
   { from: '治安終わってる',   to: '治安に波あり',       why: '断定を弱める' },
   { from: '民度最悪',         to: '雰囲気が独特',       why: '攻撃性を中和' },
+  { from: '子ども向け',       to: '年齢感は低〜中学年寄りの印象', why: '断定より印象表現に' },
+  { from: '子供向け',         to: '年齢感は低〜中学年寄りの印象', why: '断定より印象表現に' },
 ];
 
 export interface ModerationIssue {
