@@ -15,6 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin/tags" className="hover:underline">タグプール</Link>
             <Link href="/admin/games" className="hover:underline">ゲーム別</Link>
             <Link href="/admin/games" className="hover:underline" title="配信メタはゲーム別画面から編集">配信メタ</Link>
+            <Link href="/admin/feedback" className="hover:underline">ご意見</Link>
             <Link href="/" className="text-muted-foreground hover:underline">サイトへ戻る →</Link>
           </nav>
         </div>

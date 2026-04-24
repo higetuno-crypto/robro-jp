@@ -15,6 +15,12 @@ export function SiteFooter() {
           ゲーム情報は Roblox の公開データを元に独自に編集しています。
         </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/guide" className="hover:underline">
+            このサイトの使い方
+          </Link>
+          <Link href="/feedback" className="hover:underline">
+            ご意見・要望
+          </Link>
           <Link href="/privacy" className="hover:underline">
             プライバシーポリシー
           </Link>

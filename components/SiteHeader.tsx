@@ -34,6 +34,13 @@ export async function SiteHeader() {
           <Link href="/featured" className="hover:underline">
             ピックアップ
           </Link>
+          <Link
+            href="/feedback"
+            className="text-muted-foreground hover:underline hover:text-foreground"
+            title="サイトへのご意見・要望"
+          >
+            ご意見
+          </Link>
           {showPromotion && (
             <Link href="/promoted" className="hover:underline">
               宣伝
