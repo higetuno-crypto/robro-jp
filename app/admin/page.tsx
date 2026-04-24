@@ -12,6 +12,11 @@ export default function AdminHomePage() {
             タグプール管理（公式・ユーザー選択式）
           </Link>
         </li>
+        <li>
+          <Link href="/admin/games" className="underline">
+            ゲーム別タグ管理（票数増減・削除）
+          </Link>
+        </li>
       </ul>
     </div>
   );

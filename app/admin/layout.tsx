@@ -12,7 +12,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center justify-between">
           <h1 className="text-[16px] font-semibold">管理画面</h1>
           <nav className="text-[13px] flex gap-4">
-            <Link href="/admin/tags" className="hover:underline">タグ</Link>
+            <Link href="/admin/tags" className="hover:underline">タグプール</Link>
+            <Link href="/admin/games" className="hover:underline">ゲーム別</Link>
             <Link href="/" className="text-muted-foreground hover:underline">サイトへ戻る →</Link>
           </nav>
         </div>
