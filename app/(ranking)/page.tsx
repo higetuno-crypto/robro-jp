@@ -5,7 +5,6 @@ import { RankingRow } from '@/components/RankingRow';
 import { fetchFeatured } from '@/lib/featured-query';
 import { formatRelativeJa } from '@/lib/format';
 import { PurposePicker } from '@/components/PurposePicker';
-import { StreamEntryBlock } from '@/components/stream/StreamEntryBlock';
 
 /**
  * 日本で人気ランキング（/）← デフォルト
@@ -36,7 +35,6 @@ export default async function JapanPopularRankingPage() {
 
   return (
     <section>
-      <StreamEntryBlock />
       <PurposePicker />
 
       {featured.length > 0 && (
