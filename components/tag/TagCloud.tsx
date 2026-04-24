@@ -20,7 +20,7 @@ export function TagCloud({
   return (
     <div className="flex flex-wrap gap-1.5">
       {official.map((t) => (
-        <TagBadge key={t.tagId} tag={t} />
+        <TagBadge key={t.tagId} tag={t} showVoteCount />
       ))}
       {community.map((t) => (
         <TagBadge key={t.tagId} tag={t} showVoteCount />
