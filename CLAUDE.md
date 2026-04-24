@@ -79,7 +79,7 @@
 
 ### C. 配信者ページ（/stream, /stream/[slot]）
 
-**思想：配信者／インフルエンサーが「今夜の配信ネタ」を5秒で選べる専用ハブ。詳細ページとも事実ベースのランキングとも分離する。**
+**思想：配信者／インフルエンサーが「今夜の配信ネタ」を5秒で選べる専用ハブ。詳細ページとも事実ベースのランキングとも分離する。ヘッダーの「配信」タブで独立し、トップページには混ぜない（ランキングの淡々としたトーンを壊さない）。今後コンテンツを厚くしていく柱の1つ。**
 
 - トップ `/stream` は用途別スロットのカードグリッド（collab / viewer / short / reaction / no-english / loud の6枠、DB駆動化は将来）
 - `/stream/[slot]` は該当タグを持つゲーム一覧。カードには配信向けバッジ最大3つ、英語ハードルを一目で表示
@@ -260,7 +260,6 @@ roblo-jp/
 │   │   ├── TagCloud.tsx
 │   │   └── TagPickerModal.tsx
 │   ├── stream/                       # フェーズ7
-│   │   ├── StreamEntryBlock.tsx      # トップ `/` 配信入口
 │   │   ├── StreamSlotCard.tsx
 │   │   ├── StreamBadge.tsx
 │   │   ├── StreamMetaPanel.tsx       # 詳細ページ埋め込み
@@ -701,7 +700,7 @@ CREATE TABLE pricing_config (
 - [ ] `/featured/[slug]`（今週の配信ネタ記事、1本公開）
 - [ ] OG画像：`/api/og/game/[id]`、`/api/og/featured/[slug]`（`next/og` で1200x630）
 - [ ] 計測：`stream_entry_click` 等の9イベント（higesakusei/配信者導線.txt §9.1）
-- [ ] トップページに `StreamEntryBlock`（6スロットカード）追加
+- 配信導線はヘッダーの「配信」タブで独立させる（トップページに6スロットカードは置かない。ランキングの淡々としたトーンを崩さないため）
 
 **完了条件**：`/stream/collab` で該当ゲームが並び、詳細ページの配信ブロックが出て、OG画像がX共有で映える。
 
