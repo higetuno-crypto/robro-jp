@@ -6,6 +6,8 @@ import { TrendChart } from '@/components/TrendChart';
 import { TagCloud } from '@/components/tag/TagCloud';
 import { TagPickerModal } from '@/components/tag/TagPickerModal';
 import { fetchAllTags, fetchGameTags } from '@/lib/tags';
+import { VoteButtons } from '@/components/VoteButtons';
+import { fetchGameButtonVotes } from '@/lib/votes';
 import { fetchStreamingMeta } from '@/lib/streaming';
 import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
@@ -33,7 +35,7 @@ export default async function GameDetailPage({
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  const [game, snaps, tagBundle, allTags, streamingMeta] = await Promise.all([
+  const [game, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
     fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
@@ -47,6 +49,10 @@ export default async function GameDetailPage({
     fetchStreamingMeta(supabase, universeId).catch((e) => {
       console.error('[detail fetchStreamingMeta]', e);
       return null;
+    }),
+    fetchGameButtonVotes(supabase, universeId).catch((e) => {
+      console.error('[detail fetchGameButtonVotes]', e);
+      return { like: 0, save: 0, recommend: 0 };
     }),
   ]);
   if (!game) notFound();
@@ -95,6 +101,18 @@ export default async function GameDetailPage({
             </div>
           )}
         </div>
+      </div>
+
+      {/* 3ボタン投票（フェーズ8） */}
+      <div className="mt-4">
+        <VoteButtons
+          universeId={universeId}
+          initial={{
+            like: { count: voteCounts.like, voted: false },
+            save: { count: voteCounts.save, voted: false },
+            recommend: { count: voteCounts.recommend, voted: false },
+          }}
+        />
       </div>
 
       {/* タグ */}
