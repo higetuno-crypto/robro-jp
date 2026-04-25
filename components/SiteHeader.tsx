@@ -18,36 +18,36 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-border">
       <div className="max-w-3xl mx-auto px-3 py-3 flex items-center gap-4">
-        <Link href="/" className="text-[14px] font-semibold">
+        <Link href="/" className="text-[14px] font-semibold shrink-0">
           Roblox Japan Ranking
         </Link>
-        <nav className="ml-auto flex items-center gap-3 text-[14px]">
-          <Link href="/" className="hover:underline">
+        <nav className="ml-auto flex items-center gap-3 text-[14px] overflow-x-auto whitespace-nowrap min-w-0">
+          <Link href="/" className="hover:underline shrink-0">
             ランキング
           </Link>
-          <Link href="/stream" className="hover:underline">
+          <Link href="/stream" className="hover:underline shrink-0">
             配信
           </Link>
-          <Link href="/tags" className="hover:underline">
+          <Link href="/tags" className="hover:underline shrink-0">
             タグ
           </Link>
-          <Link href="/featured" className="hover:underline">
+          <Link href="/featured" className="hover:underline shrink-0">
             ピックアップ
           </Link>
           <Link
             href="/feedback"
-            className="text-muted-foreground hover:underline hover:text-foreground"
+            className="text-muted-foreground hover:underline hover:text-foreground shrink-0"
             title="サイトへのご意見・要望"
           >
             ご意見
           </Link>
           {showPromotion && (
-            <Link href="/promoted" className="hover:underline">
+            <Link href="/promoted" className="hover:underline shrink-0">
               宣伝
             </Link>
           )}
           {user ? (
-            <div className="flex items-center gap-2 pl-3 ml-1 border-l border-border text-[13px]">
+            <div className="flex items-center gap-2 pl-3 ml-1 border-l border-border text-[13px] shrink-0">
               <span className="text-muted-foreground max-w-[120px] truncate" title={displayName ?? ''}>
                 {displayName}
               </span>
@@ -60,7 +60,7 @@ export async function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="pl-3 ml-1 border-l border-border text-[13px] hover:underline"
+              className="pl-3 ml-1 border-l border-border text-[13px] hover:underline shrink-0"
             >
               ログイン
             </Link>
