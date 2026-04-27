@@ -17,6 +17,10 @@ const tabs: { href: string; label: string }[] = [
   { href: '/categories', label: 'カテゴリ' },
   { href: '/new', label: '新着' },
   { href: '/global', label: '全世界' },
+  // ↓ フェーズ8：ボタン別ランキング（ユーザー投票ベース）
+  { href: '/recommends', label: '🔥頼むから人来て' },
+  { href: '/likes', label: '❤️好き' },
+  { href: '/saves', label: '⭐お気に入り' },
 ];
 
 export default function RankingLayout({ children }: { children: ReactNode }) {

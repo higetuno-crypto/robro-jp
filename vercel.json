@@ -1,3 +1,13 @@
 {
-  "regions": ["hnd1"]
+  "regions": ["hnd1"],
+  "crons": [
+    {
+      "path": "/api/cron/fetch-games",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-voting-scores",
+      "schedule": "*/10 * * * *"
+    }
+  ]
 }

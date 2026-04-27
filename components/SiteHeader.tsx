@@ -48,6 +48,13 @@ export async function SiteHeader() {
           )}
           {user ? (
             <div className="flex items-center gap-2 pl-3 ml-1 border-l border-border text-[13px] shrink-0">
+              <Link
+                href="/me/savings"
+                className="hover:underline shrink-0"
+                title="マイリスト（⭐ お気に入り）"
+              >
+                ⭐
+              </Link>
               <span className="text-muted-foreground max-w-[120px] truncate" title={displayName ?? ''}>
                 {displayName}
               </span>
