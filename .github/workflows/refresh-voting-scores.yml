@@ -1,0 +1,39 @@
+name: refresh-voting-scores-cron
+
+# フェーズ8：マテビュー game_voting_scores の REFRESH（10分ごと）
+# Vercel Hobby は daily cron のみのため GitHub Actions から叩く構成
+# （fetch-games-cron と同じパターン）
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-voting-scores-cron
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Hit Vercel refresh endpoint
+        env:
+          REFRESH_TARGET_URL: ${{ secrets.REFRESH_TARGET_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$REFRESH_TARGET_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::REFRESH_TARGET_URL or CRON_SECRET not set"
+            exit 1
+          fi
+          http_code=$(curl -sS -o /tmp/resp.json -w "%{http_code}" \
+            --max-time 120 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$REFRESH_TARGET_URL")
+          echo "HTTP $http_code"
+          cat /tmp/resp.json || true
+          echo ""
+          if [ "$http_code" != "200" ]; then
+            exit 1
+          fi
