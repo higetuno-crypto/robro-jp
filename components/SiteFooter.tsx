@@ -2,8 +2,12 @@ import Link from 'next/link';
 
 /**
  * サイト共通フッター。
- * Roblox App Terms（資料2 L34）の「公式ではない」明示要件に自発的に準拠する
- * ディスクレーマーと、プライバシー・規約・問い合わせへの導線を提供する。
+ *
+ * 必須UI表記#1（CLAUDE.md / Creator Third-Party App Terms §1.1.3 / §10）：
+ *  - Roblox公式サービスではない
+ *  - Robloxによる承認・提携・スポンサー提供を受けていない
+ *  - ゲーム情報は Roblox 公開データを独自編集
+ *
  * 装飾は最小、ランキングページの淡々としたトーンに揃える。
  */
 export function SiteFooter() {
@@ -11,8 +15,10 @@ export function SiteFooter() {
     <footer className="mt-12 border-t border-border">
       <div className="max-w-3xl mx-auto px-3 py-6 text-[12px] text-muted-foreground leading-relaxed space-y-3">
         <p>
-          当サイトは Roblox Corporation の公式サービスではありません。
+          当サイトは Roblox Corporation の公式サービスではなく、
+          Roblox による承認・提携・スポンサー提供も受けていません。
           ゲーム情報は Roblox の公開データを元に独自に編集しています。
+          「Roblox」は Roblox Corporation の商標です。
         </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-1">
           <Link href="/guide" className="hover:underline">
