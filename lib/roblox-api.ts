@@ -60,7 +60,7 @@ async function fetchGamesBatch(universeIds: number[]): Promise<RobloxGameDetail[
   const res = await fetch(url, {
     cache: 'no-store',
     headers: {
-      'User-Agent': 'robro-jp/0.1 (https://roblo.fortunep.net)',
+      'User-Agent': 'robro-jp/0.2 (+https://robro-jp.vercel.app/)',
       Accept: 'application/json',
     },
   });
@@ -80,7 +80,7 @@ async function fetchThumbnailsBatch(
   const res = await fetch(url, {
     cache: 'no-store',
     headers: {
-      'User-Agent': 'robro-jp/0.1 (https://roblo.fortunep.net)',
+      'User-Agent': 'robro-jp/0.2 (+https://robro-jp.vercel.app/)',
       Accept: 'application/json',
     },
   });

@@ -153,28 +153,46 @@
 
 ## 運営コンプライアンス（Roblox規約遵守 / 絶対守る）
 
-**参考資料**：`higesakusei/ToS確認/02_調査でわかった事実.md`・`03_robro-jpリスク分析.md` を必ず読む。一次資料は同フォルダの `資料1.txt`（Roblox ToS 本体）〜 `資料6.txt`（Privacy Policy）。行番号は一次資料のもの。
+**参考資料**：`higesakusei/ToS確認/02_調査でわかった事実.md`・`03_robro-jpリスク分析.md`・`06_2026-04-30_ToS改定.md` を必ず読む。一次資料は同フォルダの `資料1.txt`（Roblox ToS 本体）〜 `資料6.txt`（Privacy Policy）。行番号は一次資料のもの。
 
-**今すぐ実装（フェーズ6のリリース前に完了）**：
-1. 全ページフッターに **「当サイトは Roblox Corporation の公式サービスではありません。ゲーム情報は Roblox の公開データを元に独自に編集しています。」** を表示（資料2 L34 App Terms 要件に自発的に準拠）
+**⚠️ 2026-04-30 ToS改定の主要差分**（詳細は `06_2026-04-30_ToS改定.md`）：
+- **Creator Terms §7 新設**：「Only access an API by the means described in the documentation of that API」「refrain from misrepresenting or masking your identity」 → **公式文書化された方法でのみAPIアクセス・身元秘匿禁止**
+- **Privacy 改定**：「We do not show personalized ads to users under the age of 18 on Roblox」 → **18歳未満には personalized ads を表示しない設計が必要**（AdSense導入時に対応）
+- **AI 条項本体統合**：旧AI補助規約が ToU §8 / Creator Terms §6 に吸収。AI機能を載せる時は明示開示が条項要件に
+- **Authorities共有強化**：Roblox側がDSA・UK Online Safety Act等の法執行に応じてデータ・通信内容を共有する範囲が明確化（robro-jp側の対処は不要だが認識）
+- **Cookie-based API は production 非推奨と明言**：`.ROBLOSECURITY` 自動利用・X-CSRF再現は危険度上昇 → robro-jp の現方針（無認証GETのみ）は整合
+
+**今すぐ実装（フェーズ9で完了）**：
+1. 全ページフッターに **「当サイトは Roblox Corporation の公式サービスではありません。Robloxによる承認・提携・スポンサー提供を受けていません。」** を表示（資料2 L34 App Terms §1.1.3「may not … imply any affiliation with Roblox」 / §10「Roblox is not affiliated in any way with you or your App」）
 2. `/privacy`（プライバシーポリシー）・`/terms`（利用規約）・`/contact`（削除申請・問い合わせ）ページ実装
 
+**必須UI表記4種**（2026-04-30 ToS改定で必要性が再確認・詳細は `06_2026-04-30_ToS改定.md`）：
+1. **非公式表記**（フッター固定）：上記の「公式サービスではない」文言
+2. **投票UI近接表記**：「❤️⭐🔥 は robro-jp 独自のサイト内投票です。Roblox 公式の Discover、評価、推薦、ランキングを表すものではありません。」
+3. **自薦登録フォーム近接表記**：「本人確認は、あなたが Roblox プロフィール bio に一時掲載した確認コードを、公開 users API で照合して行います。パスワード、`.ROBLOSECURITY` Cookie、アクセストークンの入力は求めません。」
+4. **広告ラベル**：各広告枠に「📢 広告」または「PR」明示。About/Legal で「本サイトの広告は robro-jp が外部広告配信事業者を通じて掲載しているものであり、Roblox 公式広告ではありません」
+
 **技術的遵守事項（出典明記）**：
-1. **Roblox由来データの売買禁止**（資料1 L292(a) / 資料3 L62）— 有料宣伝機能は Roblox との個別ライセンス契約なしに実装しない（フェーズXX保留）
-2. **Robloxユーザーのプロファイリング禁止**（資料3 L54）— fingerprint は**サイト訪問者の重複投票防止**用途のみ。Robloxアカウントとの紐付け禁止（OAuth連携しない方針）
-3. **AI/LLM訓練への投入禁止**（資料1 L292(d) / 資料3 L63）— `games.description`・ゲーム名・サムネイル等を LLM の fine-tuning / RAG データセット / embeddings 訓練に使わない。Claude Code などの開発支援ツールに参照させるのは可（モデル重みを更新しない純粋な読み取りのため）
+1. **Roblox由来データの売買禁止**（資料1 L292(a) / 資料3 L62）— 有料宣伝機能は Roblox との個別ライセンス契約なしに実装しない（v4で永続的に不実装）
+2. **Robloxユーザーのプロファイリング禁止**（資料3 L54 / Creator Third-Party App Policy「Do not build profiles for Roblox Users」）— fingerprint は**サイト訪問者の重複投票防止**用途のみ。Robloxアカウントとの紐付け禁止（OAuth連携しない方針）。**bio照合は one-shot verification のみ・bio本文は長期保存しない**（プロファイリング寄りになるため）
+3. **AI/LLM訓練への投入禁止**（資料1 L292(d) / 資料3 L63 / 2026-04-30 ToU §8 / Creator Terms §6）— `games.description`・ゲーム名・サムネイル等を LLM の fine-tuning / RAG データセット / embeddings 訓練に使わない。Claude Code などの開発支援ツールに参照させるのは可（モデル重みを更新しない純粋な読み取りのため）。**将来 robro-jp にAI機能を載せる場合は「AI is not human」「AI output is artificially generated」のUI開示が条項要件**
 4. **データ削除の即時実行体制**（資料3 L61）— `scripts/purge-roblox-data.ts` を用意。Roblox警告時に `games` / `game_snapshots` / `game_streaming_meta` を即削除。独自データ（タグ投票・featured記事）は維持
-5. **投稿ログretention** — `game_tag_vote_logs` は**6ヶ月〜1年保存**（日本プロバイダ責任制限法の発信者情報開示請求に備える）
+5. **投稿ログretention** — `game_tag_vote_logs` ・ `game_button_vote_logs` は**6ヶ月〜1年保存**（日本プロバイダ責任制限法の発信者情報開示請求に備える）
 6. **description は要約表示** — 先頭200文字まで、「詳細は Robloxで見る」導線を必須添付（クリエーター規約 L423 の著作権配慮）
 7. **サムネイルは Roblox CDN 直リンク**のみ（自前再配信禁止。クリエーター規約 L424 のサブライセンス権の射程内に留める）
+8. **API アクセス方法の制約**（Creator Terms §7 / 2026-04-30）— **公式に文書化された方法のみ**でAPIアクセス。`.ROBLOSECURITY` Cookie・X-CSRF再現・ヘッドレスログイン・Cloudflareバイパス・rate limit 回避は禁止。**User-Agent に `robro-jp` と連絡先を含め、身元秘匿しない**
+9. **API レート制限の扱い**（DevForum: non-Open Cloud は rate limit 不透明・縮退方針）— 429 を正常系として扱い、指数バックオフ＋jitter＋強キャッシュで運用。endpoint ごとに kill switch を用意
 
-**商標・ブランド**（資料4 全体）：
-1. **Robloxロゴは使わない**（資料4 L17 — "Now on Roblox" 相当の文字表現のみOK）
-2. サイト名・ドメインに **"Roblox" または類似語（Blox, Bloxy, Roblo 等）を含めない**
+**商標・ブランド**（資料4 全体 / Name and Logo Community Usage Guidelines）：
+1. **Robloxロゴは使わない**（資料4 L17 / "Besides our official badge, we do not permit the general use of our logo"）
+2. **Roblox Tilt（傾けロゴ）使用禁止**
+3. **"Now on Roblox" バッジは商用性がある自サイトでは使わない**（広告収益あるrobro-jpは該当・※AI解釈含む）
+4. サイト名・ドメインに **"Roblox" または類似語（Blox, Bloxy, Roblo 等）を含めない**
    - 現状 `robro-jp` は OK（"ro-bro" の発音、Roblox 要素なし）
    - `roblo.fortunep.net` は **NG**（"Roblox" の部分文字列 "roblo" を含む）→ 確定：`robro.fortunep.net`
    - 資料4 L19 の Experience タイトル規制は Roblox 内の話で外部サイトに直接適用されないが、日本の商標法・不正競争防止法の「出所混同」回避として自発的に順守
-3. 「公式」「公認」「パートナー」「認定」等の表現は**一切使わない**（資料2 L12 "No Misleading or Affiliation"）
+5. **サイト名・ロゴ・favicon・OG画像・ランキングUI語彙で Roblox 公式UIに寄せない**（誤認防止）
+6. 「公式」「公認」「パートナー」「認定」等の表現は**一切使わない**（資料2 L12 "No Misleading or Affiliation" / Name and Logo Guidelines「Imply official Roblox partnership or endorsement」禁止）
 
 **ユーザー投稿モデレーション**（資料5 Community Standards）：
 1. タグは**選択式のみ**（自由入力禁止 / MVP継続）
