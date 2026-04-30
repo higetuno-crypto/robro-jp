@@ -183,10 +183,13 @@
 8. **API アクセス方法の制約**（Creator Terms §7 / 2026-04-30）— **公式に文書化された方法のみ**でAPIアクセス。`.ROBLOSECURITY` Cookie・X-CSRF再現・ヘッドレスログイン・Cloudflareバイパス・rate limit 回避は禁止。**User-Agent に `robro-jp` と連絡先を含め、身元秘匿しない**
 9. **API レート制限の扱い**（DevForum: non-Open Cloud は rate limit 不透明・縮退方針）— 429 を正常系として扱い、指数バックオフ＋jitter＋強キャッシュで運用。endpoint ごとに kill switch を用意
 
-**商標・ブランド**（資料4 全体 / Name and Logo Community Usage Guidelines）：
+**商標・ブランド**（資料4 全体 / [Name and Logo Community Usage Guidelines](https://en.help.roblox.com/hc/en-us/articles/115001708126)）：
 1. **Robloxロゴは使わない**（資料4 L17 / "Besides our official badge, we do not permit the general use of our logo"）
 2. **Roblox Tilt（傾けロゴ）使用禁止**
-3. **"Now on Roblox" バッジは商用性がある自サイトでは使わない**（広告収益あるrobro-jpは該当・※AI解釈含む）
+3. **"Now on Roblox" バッジ画像は使わない**：
+   - Roblox公式ガイドでは「**creators including brand partners can use the badge for all digital promotions off of the Roblox platform**」と明示。一見 OK に見えるが、これは **creator が自分の experience を宣伝する** 文脈の許諾
+   - robro-jp は第三者リスティング（他人のゲームを並べる立場）であり、かつ AdSense による広告収益がある（"commercial content" 該当の余地あり）ため、**安全側でバッジ画像は使わない**
+   - ただし **テキスト表現は OK**：「Robloxで見る」「Robloxで遊ぶ」「Robloxで開く」「Now on Roblox」（テキスト・ロゴ画像なし）はゲームへのリンクボタン文言として使用可（資料4 L17 "「Now on Roblox」 相当の文字表現のみOK"）
 4. サイト名・ドメインに **"Roblox" または類似語（Blox, Bloxy, Roblo 等）を含めない**
    - 現状 `robro-jp` は OK（"ro-bro" の発音、Roblox 要素なし）
    - `roblo.fortunep.net` は **NG**（"Roblox" の部分文字列 "roblo" を含む）→ 確定：`robro.fortunep.net`
