@@ -19,6 +19,8 @@ const UA = 'robro-jp/0.2 (+https://robro-jp.vercel.app/) creator-verify';
  * 受け付ける形式：
  *   https://www.roblox.com/users/123456/profile
  *   https://www.roblox.com/users/123456
+ *   https://www.roblox.com/ja/users/123456/profile     ← 日本語ロケール
+ *   https://www.roblox.com/en-us/users/123456/profile  ← その他ロケール
  *   https://roblox.com/users/123456/...
  */
 export function parseRobloxUserIdFromProfileUrl(input: string): number | null {
@@ -31,7 +33,8 @@ export function parseRobloxUserIdFromProfileUrl(input: string): number | null {
     return null;
   }
   if (!/(^|\.)roblox\.com$/.test(url.hostname)) return null;
-  const m = url.pathname.match(/^\/users\/(\d+)(?:\/|$)/);
+  // ロケールプレフィックス（/ja/ /en-us/ 等）を許容
+  const m = url.pathname.match(/^(?:\/[a-z]{2}(?:-[a-z]{2})?)?\/users\/(\d+)(?:\/|$)/i);
   if (!m) return null;
   const id = Number.parseInt(m[1], 10);
   if (!Number.isFinite(id) || id <= 0) return null;

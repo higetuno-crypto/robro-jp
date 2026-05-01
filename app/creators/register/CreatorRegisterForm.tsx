@@ -182,7 +182,7 @@ export function CreatorRegisterForm({ initial }: Props) {
             value={robloxUrl}
             onChange={(e) => setRobloxUrl(e.target.value)}
             required
-            pattern="https://(www\.)?roblox\.com/users/.*"
+            pattern="https://(www\.)?roblox\.com/([a-z]{2}(-[a-z]{2})?/)?users/.*"
             className="w-full px-2 py-1.5 text-[14px] border border-border bg-background"
             placeholder="https://www.roblox.com/users/123456/profile"
           />
