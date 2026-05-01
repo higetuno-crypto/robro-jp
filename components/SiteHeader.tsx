@@ -34,6 +34,9 @@ export async function SiteHeader() {
           <Link href="/featured" className="hover:underline shrink-0">
             ピックアップ
           </Link>
+          <Link href="/creators" className="hover:underline shrink-0">
+            クリエイター
+          </Link>
           <Link
             href="/feedback"
             className="text-muted-foreground hover:underline hover:text-foreground shrink-0"
