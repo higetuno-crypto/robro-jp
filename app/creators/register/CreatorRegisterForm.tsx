@@ -262,28 +262,58 @@ export function CreatorRegisterForm({ initial }: Props) {
       {creatorId && code && !isVerified ? (
         <section className="border border-border px-3 py-3">
           <h2 className="text-[13px] font-semibold">確認手順</h2>
-          <ol className="mt-2 list-decimal list-inside text-[12px] space-y-1">
-            <li>Roblox にログインし、自分のプロフィール → About → Description を編集</li>
-            <li>下のコードを Description のどこかに貼り付けて保存</li>
-            <li>このページに戻って「確認する」を押す</li>
-          </ol>
-          <div className="mt-3">
-            <code className="inline-block font-mono text-[14px] px-2 py-1 bg-muted border border-border select-all">
-              {code}
-            </code>
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(code)}
-              className="ml-2 text-[12px] underline"
-            >
-              コピー
-            </button>
+
+          <div className="mt-2 text-[12px] space-y-1">
+            <p>
+              <strong>STEP 1.</strong> 下の確認コードをコピーします。
+            </p>
+            <div className="mt-1 mb-2 ml-4">
+              <code className="inline-block font-mono text-[14px] px-2 py-1 bg-muted border border-border select-all">
+                {code}
+              </code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(code)}
+                className="ml-2 text-[12px] underline"
+              >
+                コピー
+              </button>
+            </div>
+
+            <p>
+              <strong>STEP 2.</strong> Roblox にログインし、
+              <a
+                href="https://www.roblox.com/my/account#!/info"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline ml-0.5"
+              >
+                自己紹介の編集ページ
+              </a>
+              を開きます。
+            </p>
+            <p className="ml-4 text-muted-foreground">
+              （Robloxサイト右上の自分のアイコン →「設定」→「アカウント情報」内の「自己紹介（About）」欄でも開けます）
+            </p>
+
+            <p className="mt-2">
+              <strong>STEP 3.</strong> 「自己紹介（About）」の入力欄に、コピーしたコードを貼り付けて保存します。
+            </p>
+            <p className="ml-4 text-muted-foreground">
+              文章の途中・末尾どこでも構いません。既存の自己紹介文がある場合は、改行して末尾に追加すればOKです。
+            </p>
+
+            <p className="mt-2">
+              <strong>STEP 4.</strong> このページに戻って下の「確認する」ボタンを押します。
+            </p>
           </div>
+
           {codeExpires ? (
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              有効期限：{new Date(codeExpires).toLocaleString('ja-JP')}
+            <div className="mt-3 text-[11px] text-muted-foreground">
+              コードの有効期限：{new Date(codeExpires).toLocaleString('ja-JP')}
             </div>
           ) : null}
+
           <button
             type="button"
             onClick={handleVerify}
@@ -292,8 +322,12 @@ export function CreatorRegisterForm({ initial }: Props) {
           >
             {verifying ? '確認中…' : '確認する'}
           </button>
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            確認できたら、Roblox プロフィール bio からこのコードを削除しても認証は維持されます。
+
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            確認できたら、Roblox の自己紹介からこのコードを削除しても認証は維持されます。
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            「コードがまだ反映されていません」と表示される場合、Roblox側の保存反映に1〜2分かかることがあります。少し待ってから再度押してください。
           </p>
         </section>
       ) : null}
