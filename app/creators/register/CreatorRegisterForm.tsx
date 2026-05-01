@@ -283,17 +283,17 @@ export function CreatorRegisterForm({ initial }: Props) {
             <p>
               <strong>STEP 2.</strong> Roblox にログインし、
               <a
-                href="https://www.roblox.com/my/account#!/info"
+                href="https://www.roblox.com/ja/users/profile/edit"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline ml-0.5"
               >
-                自己紹介の編集ページ
+                プロフィール編集ページ
               </a>
               を開きます。
             </p>
             <p className="ml-4 text-muted-foreground">
-              （Robloxサイト右上の自分のアイコン →「設定」→「アカウント情報」内の「自己紹介（About）」欄でも開けます）
+              （Roblox サイト上で自分のプロフィールを開き、鉛筆アイコン → 「自己紹介」欄からも編集できます）
             </p>
 
             <p className="mt-2">
