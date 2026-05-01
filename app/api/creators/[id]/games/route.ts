@@ -9,6 +9,7 @@ import {
   resolvePlaceIdToUniverseId,
   decideGameOwnership,
   denyMessageJa,
+  fetchDevelopUniverseInfo,
 } from '@/lib/roblox-game-ownership';
 
 /**
@@ -122,22 +123,60 @@ export async function POST(
 
   // creator情報を取得（既存・新規どちらでも Roblox から最新を取って厳密判定）
   // → games 行があっても creator_name しかなく id が分からないため、Roblox API は必ず叩く
+  // games/v1 は Private/未公開ゲームに対して空配列を返すため、その場合は develop 側にフォールバック
+  let creatorInfo: { id: number; name: string; type: 'User' | 'Group' } | null = null;
+  let gameMeta: {
+    universeId: number;
+    name: string;
+    description: string | null;
+    rootPlaceId: number | null;
+    thumbnailUrl: string | null;
+    genreL1: string | null;
+    genreSlug: string | null;
+  } | null = null;
+
   const fetched = await fetchGameDetails([universeId]);
-  if (!fetched || fetched.length === 0) {
-    return NextResponse.json(
-      { error: 'roblox_game_not_found', universe_id: universeId },
-      { status: 404 }
-    );
+  if (fetched && fetched.length > 0) {
+    const g = fetched[0];
+    creatorInfo = g.creator
+      ? { id: g.creator.id, name: g.creator.name, type: g.creator.type }
+      : null;
+    gameMeta = {
+      universeId: g.id,
+      name: g.name,
+      description: g.description,
+      rootPlaceId: g.rootPlaceId,
+      thumbnailUrl: g.thumbnailUrl,
+      genreL1: g.genre_l1 ?? null,
+      genreSlug: g.untranslated_genre_l1 ?? null,
+    };
+  } else {
+    // フォールバック：Private/未公開ゲームでも作者情報が取れる develop API
+    const dev = await fetchDevelopUniverseInfo(universeId);
+    if (!dev) {
+      return NextResponse.json(
+        {
+          error: 'roblox_game_not_found',
+          universe_id: universeId,
+          hint: 'Robloxからゲーム情報を取得できませんでした。ゲームが完全に非公開（Privacy: Private）になっていないか確認してください。',
+        },
+        { status: 404 }
+      );
+    }
+    creatorInfo = dev.creator;
+    gameMeta = {
+      universeId: dev.id,
+      name: dev.name,
+      description: dev.description,
+      rootPlaceId: dev.rootPlaceId,
+      thumbnailUrl: null, // develop API はサムネを返さない
+      genreL1: null,
+      genreSlug: null,
+    };
   }
-  const g = fetched[0];
 
   // オーナー判定
-  const decision = await decideGameOwnership(
-    g.creator
-      ? { id: g.creator.id, name: g.creator.name, type: g.creator.type }
-      : null,
-    creator.roblox_user_id!
-  );
+  const decision = await decideGameOwnership(creatorInfo, creator.roblox_user_id!);
   if (decision.kind === 'deny') {
     return NextResponse.json(
       {
@@ -151,17 +190,17 @@ export async function POST(
   }
 
   // games が無ければ INSERT
-  if (!existingGame) {
+  if (!existingGame && gameMeta) {
     const { error: insertErr } = await supabase.from('games').insert({
-      universe_id: g.id,
-      place_id: g.rootPlaceId,
-      name: g.name,
-      description: g.description,
-      creator_name: g.creator?.name ?? null,
-      creator_type: g.creator?.type ?? null,
-      thumbnail_url: g.thumbnailUrl,
-      genre_l1: g.genre_l1 ?? null,
-      genre_slug: g.untranslated_genre_l1 ?? null,
+      universe_id: gameMeta.universeId,
+      place_id: gameMeta.rootPlaceId,
+      name: gameMeta.name,
+      description: gameMeta.description,
+      creator_name: creatorInfo?.name ?? null,
+      creator_type: creatorInfo?.type ?? null,
+      thumbnail_url: gameMeta.thumbnailUrl,
+      genre_l1: gameMeta.genreL1,
+      genre_slug: gameMeta.genreSlug,
     });
     if (insertErr) {
       console.error('[creator games INSERT new game]', insertErr);
@@ -199,7 +238,7 @@ export async function POST(
     universe_id: universeId,
     is_primary,
     ownership: decision.reason,
-    game_name: g.name,
+    game_name: gameMeta?.name ?? '',
   });
 }
 

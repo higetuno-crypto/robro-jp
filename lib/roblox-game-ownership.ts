@@ -12,7 +12,69 @@ import 'server-only';
 const PLACE_TO_UNIVERSE_URL =
   'https://apis.roblox.com/universes/v1/places';
 const GROUPS_URL = 'https://groups.roblox.com/v1/groups';
+const DEVELOP_UNIVERSE_URL = 'https://develop.roblox.com/v1/universes';
 const UA = 'robro-jp/0.2 (+https://robro-jp.vercel.app/) creator-game-verify';
+
+/**
+ * games.roblox.com/v1/games が空を返した場合のフォールバック。
+ * develop.roblox.com/v1/universes/{id} は Private ゲームでも creator + 名前を返す。
+ */
+export interface DevelopUniverseInfo {
+  id: number;
+  name: string;
+  description: string | null;
+  rootPlaceId: number | null;
+  privacyType: 'Public' | 'Private' | string;
+  isActive: boolean;
+  creator: { id: number; name: string; type: 'User' | 'Group' };
+}
+
+export async function fetchDevelopUniverseInfo(
+  universeId: number
+): Promise<DevelopUniverseInfo | null> {
+  try {
+    const res = await fetch(`${DEVELOP_UNIVERSE_URL}/${universeId}`, {
+      headers: { 'User-Agent': UA },
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const d = (await res.json()) as {
+      id?: number;
+      name?: string;
+      description?: string | null;
+      rootPlaceId?: number | null;
+      privacyType?: string;
+      isActive?: boolean;
+      creatorType?: string;
+      creatorTargetId?: number;
+      creatorName?: string;
+    };
+    if (
+      typeof d.id !== 'number' ||
+      typeof d.name !== 'string' ||
+      typeof d.creatorTargetId !== 'number' ||
+      (d.creatorType !== 'User' && d.creatorType !== 'Group')
+    ) {
+      return null;
+    }
+    return {
+      id: d.id,
+      name: d.name,
+      description: d.description ?? null,
+      rootPlaceId: d.rootPlaceId ?? null,
+      privacyType: d.privacyType ?? 'Public',
+      isActive: !!d.isActive,
+      creator: {
+        id: d.creatorTargetId,
+        name: d.creatorName ?? '',
+        type: d.creatorType,
+      },
+    };
+  } catch (e) {
+    console.error('[fetchDevelopUniverseInfo]', e);
+    return null;
+  }
+}
 
 export async function resolvePlaceIdToUniverseId(
   placeId: number
