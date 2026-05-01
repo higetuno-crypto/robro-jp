@@ -58,6 +58,13 @@ export async function SiteHeader() {
               >
                 ⭐
               </Link>
+              <Link
+                href="/creators/me"
+                className="hover:underline shrink-0"
+                title="クリエイターマイページ"
+              >
+                🎨
+              </Link>
               <span className="text-muted-foreground max-w-[120px] truncate" title={displayName ?? ''}>
                 {displayName}
               </span>
