@@ -36,6 +36,9 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:underline">
             お問い合わせ・削除申請
           </Link>
+          <Link href="/legal/bans" className="hover:underline">
+            モデレーションログ
+          </Link>
         </nav>
       </div>
     </footer>

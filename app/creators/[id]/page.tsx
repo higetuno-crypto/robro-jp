@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import { getCreatorById, listCreatorGames, toPublic } from '@/lib/creators';
+import { ReportButton } from '@/components/ReportButton';
 
 /**
  * /creators/[id] クリエイター詳細ページ（フェーズ10）
@@ -159,6 +160,12 @@ export default async function CreatorDetailPage({ params }: PageProps) {
           </ul>
         )}
       </section>
+
+      {isPublic ? (
+        <div className="mt-6 text-right">
+          <ReportButton targetType="creator" targetId={pub.id} />
+        </div>
+      ) : null}
 
       <p className="mt-10 text-[10px] text-muted-foreground">
         本人確認は、{pub.display_name}

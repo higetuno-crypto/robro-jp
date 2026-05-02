@@ -11,6 +11,7 @@ import { fetchGameButtonVotes } from '@/lib/votes';
 import { fetchStreamingMeta } from '@/lib/streaming';
 import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
+import { ReportButton } from '@/components/ReportButton';
 
 /**
  * 個別ゲーム詳細ページ
@@ -176,6 +177,10 @@ export default async function GameDetailPage({
       <div className="mt-2">
         <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
         <TrendChart data={snaps} />
+      </div>
+
+      <div className="mt-6 text-right">
+        <ReportButton targetType="game" targetId={Number(game.universeId)} />
       </div>
     </section>
   );
