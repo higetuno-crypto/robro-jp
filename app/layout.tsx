@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackFab } from "@/components/FeedbackFab";
+
+const ADSENSE_CLIENT_ID = 'ca-pub-5811589837476935';
 
 /**
  * 日本語ファースト設計のため、本文フォントは Noto Sans JP を採用。
@@ -44,6 +47,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className={cn("font-sans", notoSansJP.variable)}>
+      <head>
+        {/* Google AdSense（フェーズ12 §6 / 審査用 + 配信用兼用スニペット） */}
+        <Script
+          id="google-adsense"
+          async
+          strategy="afterInteractive"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="antialiased min-h-screen bg-background">
         <SiteHeader />
         {children}
