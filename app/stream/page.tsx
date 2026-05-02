@@ -9,7 +9,7 @@ import { StreamSlotCard } from '@/components/stream/StreamSlotCard';
 export const revalidate = 1800;
 
 export const metadata = {
-  title: '配信ネタ | Roblox Japan Ranking',
+  title: '配信ネタ',
   description: '配信者向けに、扱いやすいRobloxをスロット別に集めました。',
 };
 

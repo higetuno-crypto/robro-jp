@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: '利用規約 | Roblox Japan Ranking',
+  title: '利用規約',
   description: '本サイトの利用規約',
 };
 
@@ -19,7 +19,7 @@ export default function TermsPage() {
       <section className="space-y-2">
         <h2 className="text-[16px] font-semibold">第1条（適用）</h2>
         <p>
-          本規約は、本サイト（robro-jp）の運営者（以下「運営者」）が提供する本サイトのすべての機能の利用について、
+          本規約は、本サイト（ro-brojp）の運営者（以下「運営者」）が提供する本サイトのすべての機能の利用について、
           運営者と利用者との間に適用されます。本サイトを利用することにより、利用者は本規約に同意したものとみなします。
         </p>
       </section>

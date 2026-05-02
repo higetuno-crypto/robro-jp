@@ -212,7 +212,7 @@ export function VoteButtons({
         Roblox公式の Discover / 評価 / 推薦 / ランキングと混同されないよう近接表記。
       */}
       <p className="text-[11px] text-muted-foreground leading-snug">
-        ❤️⭐🔥 は robro-jp 独自のサイト内投票です。Roblox 公式の評価・推薦・ランキングを表すものではありません。
+        ❤️⭐🔥 は ro-brojp 独自のサイト内投票です。Roblox 公式の評価・推薦・ランキングを表すものではありません。
       </p>
       {toast && (
         <div

@@ -20,8 +20,12 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Roblox Japan Ranking",
-  description: "日本語圏向けRobloxゲームのリアルタイムCCUランキング",
+  metadataBase: new URL('https://ro-brojp.com'),
+  title: {
+    default: 'ro-brojp — 日本人向け Roblox 発見サイト',
+    template: '%s | ro-brojp',
+  },
+  description: '日本語圏向け Roblox ゲームのリアルタイム CCU ランキング・タグ・配信ネタ・クリエイター発見サイト',
 };
 
 /**

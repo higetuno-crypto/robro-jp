@@ -45,7 +45,7 @@ async function fetchSort(sortId: string, sessionId: string): Promise<ExploreGame
   const res = await fetch(url, {
     cache: 'no-store',
     headers: {
-      'User-Agent': 'robro-jp/0.2 (+https://robro-jp.vercel.app/)',
+      'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
       Accept: 'application/json',
     },
   });

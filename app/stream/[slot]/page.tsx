@@ -20,7 +20,7 @@ export async function generateMetadata({
   params: { slot: string };
 }) {
   return {
-    title: `配信向け：${params.slot} | Roblox Japan Ranking`,
+    title: `配信向け：${params.slot}`,
   };
 }
 

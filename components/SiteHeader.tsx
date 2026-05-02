@@ -19,7 +19,7 @@ export async function SiteHeader() {
     <header className="border-b border-border">
       <div className="max-w-3xl mx-auto px-3 py-3 flex items-center gap-4">
         <Link href="/" className="text-[14px] font-semibold shrink-0">
-          Roblox Japan Ranking
+          ro-brojp
         </Link>
         <nav className="ml-auto flex items-center gap-3 text-[14px] overflow-x-auto whitespace-nowrap min-w-0">
           <Link href="/" className="hover:underline shrink-0">

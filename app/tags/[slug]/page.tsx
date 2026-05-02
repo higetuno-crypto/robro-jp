@@ -29,9 +29,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const supabase = createBrowserClient();
   const tag = await fetchTagBySlug(supabase, decodeURIComponent(params.slug));
-  if (!tag) return { title: 'タグが見つかりません | Roblox Japan Ranking' };
+  if (!tag) return { title: 'タグが見つかりません' };
   return {
-    title: `${tag.tagName}タグのゲーム | Roblox Japan Ranking`,
+    title: `${tag.tagName}タグのゲーム`,
     description: tag.description ?? `${tag.tagName} タグが付けられた Roblox ゲーム一覧`,
   };
 }

@@ -5,7 +5,7 @@ import { VoteRankingRow } from '@/components/VoteRankingRow';
 /**
  * 「頼むから人来て」ランキング（/recommends）
  *
- * 🔥 ボタンの票数（ベイズ平均）順。robro-jp の中核差別化要素。
+ * 🔥 ボタンの票数（ベイズ平均）順。ro-brojp の中核差別化要素。
  * idea-evaluation-v3.md §A3 / §B5。
  */
 export const revalidate = 300;

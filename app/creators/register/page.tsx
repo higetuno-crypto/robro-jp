@@ -18,7 +18,7 @@ import { CreatorRegisterForm } from './CreatorRegisterForm';
  */
 
 export const metadata = {
-  title: 'クリエイター自薦登録 | Roblox Japan Ranking',
+  title: 'クリエイター自薦登録',
   robots: { index: true, follow: true },
 };
 
@@ -37,7 +37,7 @@ export default async function CreatorRegisterPage() {
     <main className="max-w-xl mx-auto px-3 py-6">
       <h1 className="text-[18px] font-semibold">クリエイター自薦登録</h1>
       <p className="text-[13px] text-muted-foreground mt-1">
-        Roblox 上で活動しているあなたを robro-jp 上で発見されやすくします。完全無料です。
+        Roblox 上で活動しているあなたを ro-brojp 上で発見されやすくします。完全無料です。
       </p>
 
       {/* 必須UI表記#3（CLAUDE.md「必須UI表記4種」#3） */}
@@ -50,7 +50,7 @@ export default async function CreatorRegisterPage() {
           アクセストークンの入力は求めません。
         </p>
         <p className="mt-1 text-muted-foreground">
-          照合に使う Roblox プロフィール bio の本文は robro-jp に保存しません。確認コードの一致判定のみを行います。
+          照合に使う Roblox プロフィール bio の本文は ro-brojp に保存しません。確認コードの一致判定のみを行います。
         </p>
       </section>
 

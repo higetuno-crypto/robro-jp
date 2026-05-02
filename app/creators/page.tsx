@@ -9,8 +9,8 @@ import { listVerifiedCreators } from '@/lib/creators';
  */
 
 export const metadata = {
-  title: 'クリエイター | Roblox Japan Ranking',
-  description: 'robro-jp に自薦登録した日本語圏 Roblox クリエイター一覧',
+  title: 'クリエイター',
+  description: 'ro-brojp に自薦登録した日本語圏 Roblox クリエイター一覧',
 };
 
 export const revalidate = 300;

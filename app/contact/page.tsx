@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'お問い合わせ・削除申請 | Roblox Japan Ranking',
+  title: 'お問い合わせ・削除申請',
   description: '本サイトへのお問い合わせ・掲載情報の削除申請窓口',
 };
 
@@ -18,7 +18,7 @@ export default function ContactPage() {
       <header>
         <h1 className="text-[20px] font-semibold">お問い合わせ・削除申請</h1>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          本サイト（robro-jp）に関するご質問、および掲載情報の削除申請を受け付けます。
+          本サイト（ro-brojp）に関するご質問、および掲載情報の削除申請を受け付けます。
         </p>
       </header>
 

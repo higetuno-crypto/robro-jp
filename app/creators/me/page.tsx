@@ -19,7 +19,7 @@ import { MyPageClient } from './MyPageClient';
  */
 
 export const metadata = {
-  title: 'クリエイターマイページ | Roblox Japan Ranking',
+  title: 'クリエイターマイページ',
   robots: { index: false, follow: false },
 };
 

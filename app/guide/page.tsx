@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'このサイトの使い方 | Roblox Japan Ranking',
+  title: 'このサイトの使い方',
   description:
-    'robro-jp の使い方ガイド。Googleアカウントの作り方、タグの付け方、配信ネタの探し方、ご意見の送り方を解説します。',
+    'ro-brojp の使い方ガイド。Googleアカウントの作り方、タグの付け方、配信ネタの探し方、ご意見の送り方を解説します。',
 };
 
 /**
@@ -19,7 +19,7 @@ export default function GuidePage() {
       <header className="space-y-2">
         <h1 className="text-[22px] font-semibold">このサイトの使い方</h1>
         <p className="text-[13px] text-muted-foreground">
-          robro-jp は、日本語ユーザー向けの Roblox ゲーム発見サイトです。
+          ro-brojp は、日本語ユーザー向けの Roblox ゲーム発見サイトです。
           初めての方でも迷わないように、主な使い方をまとめました（5分で読めます）。
         </p>
       </header>
@@ -73,10 +73,10 @@ export default function GuidePage() {
           <li>「Google でログイン」ボタンを押す</li>
           <li>Google の画面でアカウントを選ぶ</li>
           <li>許可を求められたら「許可」を押す</li>
-          <li>robro-jp に戻ってきたらログイン完了</li>
+          <li>ro-brojp に戻ってきたらログイン完了</li>
         </ol>
         <p className="text-[13px] text-muted-foreground">
-          ※ robro-jp は Google アカウントのメールアドレスと表示名以外の情報を取得しません。
+          ※ ro-brojp は Google アカウントのメールアドレスと表示名以外の情報を取得しません。
           詳しくは<Link href="/privacy" className="underline mx-1">プライバシーポリシー</Link>をご覧ください。
         </p>
       </Section>

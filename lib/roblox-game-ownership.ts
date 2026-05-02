@@ -13,7 +13,7 @@ const PLACE_TO_UNIVERSE_URL =
   'https://apis.roblox.com/universes/v1/places';
 const GROUPS_URL = 'https://groups.roblox.com/v1/groups';
 const DEVELOP_UNIVERSE_URL = 'https://develop.roblox.com/v1/universes';
-const UA = 'robro-jp/0.2 (+https://robro-jp.vercel.app/) creator-game-verify';
+const UA = 'robro-jp/0.2 (+https://ro-brojp.com/) creator-game-verify';
 
 /**
  * games.roblox.com/v1/games が空を返した場合のフォールバック。

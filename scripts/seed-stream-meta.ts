@@ -344,7 +344,7 @@ async function main() {
   console.log(`\n=== done: ok=${ok} skipped=${skipped} failed=${failed} ===`);
   if (skipped > 0) {
     console.log(
-      'universe_id を最新ランキング（https://robro-jp.vercel.app/）のものに差し替えて再実行してください。'
+      'universe_id を最新ランキング（https://ro-brojp.com/）のものに差し替えて再実行してください。'
     );
   }
 }

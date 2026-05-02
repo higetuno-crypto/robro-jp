@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/supabase-ssr';
 import { LoginButtons } from './LoginButtons';
 
 export const metadata = {
-  title: 'ログイン | Roblox Japan Ranking',
+  title: 'ログイン',
   robots: { index: false, follow: false },
 };
 

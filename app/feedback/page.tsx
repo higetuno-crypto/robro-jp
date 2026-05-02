@@ -22,9 +22,9 @@ import { FeedbackRow } from './FeedbackRow';
  */
 
 export const metadata: Metadata = {
-  title: 'ご意見・要望ボード | Roblox Japan Ranking',
+  title: 'ご意見・要望ボード',
   description:
-    'robro-jp へのご意見・要望を投稿・投票できます。投票が集まった要望から順番に運営が検討・対応します。',
+    'ro-brojp へのご意見・要望を投稿・投票できます。投票が集まった要望から順番に運営が検討・対応します。',
 };
 
 export const dynamic = 'force-dynamic';

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'プライバシーポリシー | Roblox Japan Ranking',
+  title: 'プライバシーポリシー',
   description: '本サイトにおける個人関連情報の取り扱いについて',
 };
 
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <section className="space-y-2">
         <h2 className="text-[16px] font-semibold">1. はじめに</h2>
         <p>
-          本サイト（robro-jp）の運営者（以下「運営者」）は、本サイトを利用される方（以下「利用者」）のプライバシーを尊重し、
+          本サイト（ro-brojp）の運営者（以下「運営者」）は、本サイトを利用される方（以下「利用者」）のプライバシーを尊重し、
           取得する情報を必要最小限に留めることを基本方針とします。本ポリシーは、本サイトにおける個人関連情報の
           取り扱いについて定めたものです。
         </p>

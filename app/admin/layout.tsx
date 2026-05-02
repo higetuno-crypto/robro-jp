@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: '管理画面 | Roblox Japan Ranking',
+  title: '管理画面',
   robots: { index: false, follow: false },
 };
 

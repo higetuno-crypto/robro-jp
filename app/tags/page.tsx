@@ -4,7 +4,7 @@ import { createBrowserClient } from '@/lib/supabase';
 import { fetchTagsWithStats, type TagGroup, type TagStats } from '@/lib/tags';
 
 export const metadata: Metadata = {
-  title: 'タグ一覧 | Roblox Japan Ranking',
+  title: 'タグ一覧',
   description: 'ゲームに付けられたタグを人気・新着・カテゴリ別で一覧表示',
 };
 

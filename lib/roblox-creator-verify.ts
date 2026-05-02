@@ -12,7 +12,7 @@ import 'server-only';
  */
 
 const USERS_API = 'https://users.roblox.com/v1/users';
-const UA = 'robro-jp/0.2 (+https://robro-jp.vercel.app/) creator-verify';
+const UA = 'robro-jp/0.2 (+https://ro-brojp.com/) creator-verify';
 
 /**
  * Roblox プロフィール URL から userId をパース
