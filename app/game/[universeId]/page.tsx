@@ -37,7 +37,7 @@ export default async function GameDetailPage({
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  let [game, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
+  const [initialGame, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
     fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
@@ -58,6 +58,7 @@ export default async function GameDetailPage({
     }),
   ]);
   // 検索からの遷移などで DB に未登録のゲームは on-demand で取得して upsert する
+  let game = initialGame;
   if (!game) {
     game = await ensureGameInDb(universeId);
     if (!game) notFound();
