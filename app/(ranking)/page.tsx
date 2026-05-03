@@ -95,6 +95,27 @@ export default async function JapanPopularRankingPage() {
           <RankingRow key={r.universeId} row={r} />
         ))}
       </div>
+
+      {rows.length > 0 && (
+        <div className="border-t border-border px-3 py-5 mt-2">
+          <div className="text-[13px] leading-relaxed text-muted-foreground">
+            <p>このサイトは一人で開発・運用しています。</p>
+            <p className="mt-1">
+              特に「日本で人気」ランキングは独自プログラムで集計しているため、
+              まだうまく機能していません。
+            </p>
+            <p className="mt-1">皆さんの力でこのサイトを完成させてくれませんか？</p>
+          </div>
+          <div className="mt-3">
+            <Link
+              href="/feedback"
+              className="inline-block text-[13px] underline hover:no-underline"
+            >
+              → ご意見・要望を送る
+            </Link>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
