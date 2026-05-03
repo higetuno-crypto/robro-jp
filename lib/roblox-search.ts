@@ -5,16 +5,17 @@
  *  - 公式に文書化された方法のみ（Creator Terms §7）
  *  - User-Agent に robro-jp と連絡先を含める（身元秘匿しない）
  *  - 429 を正常系として扱い、空配列で返す
- *  - description は短く（200字）受け取り、長期保存しない
+ *  - description は短く受け取り、長期保存しない
  *
  * エンドポイント：
- *  games.roblox.com/v1/games/list?model.keyword=... は無認証 GET で動く
- *  公式 Discover の旧UI が使っていた endpoint。サムネは別途 thumbnails API。
+ *  apis.roblox.com/search-api/omni-search が現行の公式 Discover の検索 API。
+ *  無認証 GET で動く。pageType=all で全カテゴリ横断検索。
+ *  旧 games.roblox.com/v1/games/list は2026時点で 404 撤去済み。
  */
 
 import { TtlCache } from './search-cache';
 
-const SEARCH_URL = 'https://games.roblox.com/v1/games/list';
+const SEARCH_URL = 'https://apis.roblox.com/search-api/omni-search';
 const THUMBNAIL_URL = 'https://thumbnails.roblox.com/v1/games/icons';
 const USER_AGENT = 'robro-jp/0.2 (+https://ro-brojp.com/)';
 
@@ -28,32 +29,29 @@ export interface RobloxSearchHit {
   thumbnailUrl: string | null;
 }
 
-interface RawGameListItem {
-  creatorId: number;
-  creatorName: string;
-  creatorType: 'User' | 'Group';
-  creatorHasVerifiedBadge?: boolean;
-  totalUpVotes?: number;
-  totalDownVotes?: number;
+interface OmniContent {
   universeId: number;
   name: string;
-  placeId: number;
-  playerCount: number;
-  imageToken?: string;
+  description?: string;
+  playerCount?: number;
+  creatorName?: string;
+  creatorId?: number;
+  rootPlaceId?: number;
   isSponsored?: boolean;
-  nativeAdData?: string;
-  isShowSponsoredLabel?: boolean;
-  price?: number | null;
-  analyticsIdentifier?: string | null;
-  gameDescription?: string;
-  genre?: string;
+  contentType?: string;
+  contentId?: number;
 }
 
-interface GameListResponse {
-  games: RawGameListItem[];
-  suggestedKeyword?: string;
-  filteredKeyword?: string;
-  hasMoreRows?: boolean;
+interface OmniGroup {
+  contentGroupType: string;
+  contents: OmniContent[];
+  topicId?: string;
+}
+
+interface OmniSearchResponse {
+  searchResults: OmniGroup[];
+  nextPageToken?: string;
+  vertical?: string;
 }
 
 interface ThumbnailResponse {
@@ -82,12 +80,12 @@ export async function searchRobloxGames(
   if (cached) return cached;
 
   try {
+    // sessionId は API が要求するが、anonymous で適当な ID で動く
+    const sessionId = `robro-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const url =
-      `${SEARCH_URL}?model.keyword=${encodeURIComponent(q)}` +
-      `&model.maxRows=${limit}` +
-      `&model.startRows=0` +
-      `&model.sortToken=&model.gameFilter=&model.timeFilter=0&model.genreFilter=0` +
-      `&model.contextCountryRegionId=0&model.contextUniverseId=&model.pageContext.pageId=&model.pageContext.isSeeAllPage=false`;
+      `${SEARCH_URL}?searchQuery=${encodeURIComponent(q)}` +
+      `&sessionId=${encodeURIComponent(sessionId)}` +
+      `&pageType=all`;
     const res = await fetch(url, {
       cache: 'no-store',
       headers: {
@@ -104,21 +102,39 @@ export async function searchRobloxGames(
       console.error(`[roblox-search] ${res.status} ${res.statusText}`);
       return [];
     }
-    const json = (await res.json()) as GameListResponse;
-    const items = (json.games ?? []).filter((g) => !g.isSponsored);
+    const json = (await res.json()) as OmniSearchResponse;
+
+    // ContentGroupType=Game のみ抽出。各 group は contents:[1要素] の構造
+    const items: OmniContent[] = [];
+    for (const g of json.searchResults ?? []) {
+      if (g.contentGroupType !== 'Game') continue;
+      for (const c of g.contents ?? []) {
+        if (c.isSponsored) continue;
+        if (!c.universeId) continue;
+        items.push(c);
+        if (items.length >= limit) break;
+      }
+      if (items.length >= limit) break;
+    }
+
+    if (items.length === 0) {
+      cache.set(cacheKey, []);
+      return [];
+    }
 
     // サムネを別 API でまとめて取得
-    const ids = items.map((g) => g.universeId);
-    const thumbs = ids.length > 0 ? await fetchThumbnails(ids) : new Map();
+    const ids = items.map((c) => c.universeId);
+    const thumbs = await fetchThumbnails(ids);
 
-    const hits: RobloxSearchHit[] = items.map((g) => ({
-      universeId: g.universeId,
-      placeId: g.placeId ?? null,
-      name: g.name,
-      creatorName: g.creatorName ?? null,
-      creatorType: g.creatorType ?? null,
-      playing: g.playerCount ?? 0,
-      thumbnailUrl: thumbs.get(g.universeId) ?? null,
+    const hits: RobloxSearchHit[] = items.map((c) => ({
+      universeId: c.universeId,
+      placeId: c.rootPlaceId ?? null,
+      name: c.name,
+      creatorName: c.creatorName && c.creatorName.length > 0 ? c.creatorName : null,
+      // omni-search は creatorType を返さないため null。後段で気にしない
+      creatorType: null,
+      playing: c.playerCount ?? 0,
+      thumbnailUrl: thumbs.get(c.universeId) ?? null,
     }));
 
     cache.set(cacheKey, hits);
