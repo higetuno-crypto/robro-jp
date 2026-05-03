@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/supabase-ssr';
+import { SearchBox } from './SearchBox';
 
 /**
  * サイト共通ヘッダー。
@@ -21,6 +22,7 @@ export async function SiteHeader() {
         <Link href="/" className="text-[14px] font-semibold shrink-0">
           ro-brojp
         </Link>
+        <SearchBox />
         <nav className="ml-auto flex items-center gap-3 text-[14px] overflow-x-auto whitespace-nowrap min-w-0">
           <Link href="/" className="hover:underline shrink-0">
             ランキング

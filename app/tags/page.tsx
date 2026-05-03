@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { fetchTagsWithStats, type TagGroup, type TagStats } from '@/lib/tags';
+import { InlineSearchForm } from '@/components/InlineSearchForm';
 
 export const metadata: Metadata = {
   title: 'タグ一覧',
@@ -50,11 +51,24 @@ function parseView(v: string | undefined): View {
 export default async function TagsIndexPage({
   searchParams,
 }: {
-  searchParams: { view?: string };
+  searchParams: { view?: string; q?: string };
 }) {
   const view = parseView(searchParams.view);
+  const q = (searchParams.q ?? '').trim().slice(0, 60);
   const supabase = createBrowserClient();
-  const tags = await fetchTagsWithStats(supabase);
+  const allTags = await fetchTagsWithStats(supabase);
+
+  // タグ名・description で部分一致フィルタ（DB から全件取って絞るシンプル実装）
+  const tags = q
+    ? allTags.filter((t) => {
+        const needle = q.toLowerCase();
+        return (
+          t.tagName.toLowerCase().includes(needle) ||
+          t.tagId.toLowerCase().includes(needle) ||
+          (t.description ?? '').toLowerCase().includes(needle)
+        );
+      })
+    : allTags;
 
   return (
     <main className="max-w-3xl mx-auto px-3 py-6">
@@ -65,14 +79,27 @@ export default async function TagsIndexPage({
         </p>
       </header>
 
+      <div className="mb-4">
+        <InlineSearchForm
+          action="/tags"
+          placeholder="タグ名で絞り込み"
+          defaultValue={q}
+        />
+        {q && (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            「{q}」に一致するタグ：{tags.length} 件
+          </p>
+        )}
+      </div>
+
       <nav className="flex gap-3 border-b border-border mb-4 text-[13px]">
-        <TabLink href="/tags" active={view === 'popular'}>
+        <TabLink href={q ? `/tags?q=${encodeURIComponent(q)}` : '/tags'} active={view === 'popular'}>
           人気
         </TabLink>
-        <TabLink href="/tags?view=new" active={view === 'new'}>
+        <TabLink href={q ? `/tags?view=new&q=${encodeURIComponent(q)}` : '/tags?view=new'} active={view === 'new'}>
           新着
         </TabLink>
-        <TabLink href="/tags?view=group" active={view === 'group'}>
+        <TabLink href={q ? `/tags?view=group&q=${encodeURIComponent(q)}` : '/tags?view=group'} active={view === 'group'}>
           カテゴリ別
         </TabLink>
       </nav>

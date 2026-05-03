@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase';
 import { fetchGameDetail, fetchRecentSnapshots } from '@/lib/game-detail-query';
+import { ensureGameInDb } from '@/lib/ensure-game';
 import { TrendChart } from '@/components/TrendChart';
 import { TagCloud } from '@/components/tag/TagCloud';
 import { TagPickerModal } from '@/components/tag/TagPickerModal';
@@ -36,7 +37,7 @@ export default async function GameDetailPage({
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  const [game, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
+  let [game, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
     fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
@@ -56,7 +57,11 @@ export default async function GameDetailPage({
       return { like: 0, save: 0, recommend: 0 };
     }),
   ]);
-  if (!game) notFound();
+  // 検索からの遷移などで DB に未登録のゲームは on-demand で取得して upsert する
+  if (!game) {
+    game = await ensureGameInDb(universeId);
+    if (!game) notFound();
+  }
 
   const latest = snaps.length > 0 ? snaps[snaps.length - 1] : null;
   const robloxUrl = game.placeId

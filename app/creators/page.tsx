@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase';
 import { listVerifiedCreators } from '@/lib/creators';
+import { InlineSearchForm } from '@/components/InlineSearchForm';
 
 /**
  * /creators 一覧ページ（フェーズ10）
@@ -15,9 +16,25 @@ export const metadata = {
 
 export const revalidate = 300;
 
-export default async function CreatorsPage() {
+export default async function CreatorsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const q = (searchParams.q ?? '').trim().slice(0, 60);
   const supabase = createBrowserClient();
-  const creators = await listVerifiedCreators(supabase, 100);
+  const allCreators = await listVerifiedCreators(supabase, 100);
+
+  // 表示名・自己紹介で部分一致フィルタ（DB から全件取って絞るシンプル実装）
+  const creators = q
+    ? allCreators.filter((c) => {
+        const needle = q.toLowerCase();
+        return (
+          c.display_name.toLowerCase().includes(needle) ||
+          (c.self_introduction ?? '').toLowerCase().includes(needle)
+        );
+      })
+    : allCreators;
 
   return (
     <main className="max-w-3xl mx-auto px-3 py-4">
@@ -34,11 +51,30 @@ export default async function CreatorsPage() {
         日本語圏で活動する Roblox クリエイター。本人申請＋ Roblox プロフィール照合で確認済み。
       </p>
 
+      <div className="mt-4">
+        <InlineSearchForm
+          action="/creators"
+          placeholder="クリエイター名で検索"
+          defaultValue={q}
+        />
+        {q && (
+          <p className="mt-2 text-[12px] text-muted-foreground">
+            「{q}」に一致するクリエイター：{creators.length} 件
+          </p>
+        )}
+      </div>
+
       {creators.length === 0 ? (
         <div className="mt-6 text-[13px] text-muted-foreground">
-          まだ登録クリエイターはいません。あなたが Roblox クリエイターなら{' '}
-          <Link href="/creators/register" className="underline">こちらから登録</Link>{' '}
-          できます。
+          {q ? (
+            <>「{q}」に一致するクリエイターはいませんでした。</>
+          ) : (
+            <>
+              まだ登録クリエイターはいません。あなたが Roblox クリエイターなら{' '}
+              <Link href="/creators/register" className="underline">こちらから登録</Link>{' '}
+              できます。
+            </>
+          )}
         </div>
       ) : (
         <ul className="mt-4 divide-y divide-border border-y border-border">
