@@ -28,14 +28,14 @@ export function SearchBox() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex items-center shrink min-w-0" role="search">
+    <form onSubmit={onSubmit} className="flex items-center w-full" role="search">
       <input
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="ゲーム検索"
+        placeholder="ゲーム名・開発者名で検索（Roblox 全体から）"
         aria-label="ゲーム検索"
-        className="text-[13px] px-2 py-1 border border-border bg-background w-[120px] sm:w-[160px] focus:w-[200px] transition-all outline-none focus:border-foreground"
+        className="text-[13px] px-2 py-1 border border-border bg-background w-full outline-none focus:border-foreground"
         maxLength={100}
       />
     </form>

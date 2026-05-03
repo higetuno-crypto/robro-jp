@@ -18,11 +18,10 @@ export async function SiteHeader() {
 
   return (
     <header className="border-b border-border">
-      <div className="max-w-3xl mx-auto px-3 py-3 flex items-center gap-4">
+      <div className="max-w-3xl mx-auto px-3 pt-3 pb-2 flex items-center gap-4">
         <Link href="/" className="text-[14px] font-semibold shrink-0">
           ro-brojp
         </Link>
-        <SearchBox />
         <nav className="ml-auto flex items-center gap-3 text-[14px] overflow-x-auto whitespace-nowrap min-w-0">
           <Link href="/" className="hover:underline shrink-0">
             ランキング
@@ -85,6 +84,9 @@ export async function SiteHeader() {
             </Link>
           )}
         </nav>
+      </div>
+      <div className="max-w-3xl mx-auto px-3 pb-2">
+        <SearchBox />
       </div>
     </header>
   );
