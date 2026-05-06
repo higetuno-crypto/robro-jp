@@ -9,6 +9,7 @@ import {
   castVote,
   makeFingerprint,
 } from '@/lib/tags';
+import { maybeAwardFirstTagger } from '@/lib/badges';
 
 /**
  * フェーズ6：タグAPI
@@ -182,7 +183,25 @@ export async function POST(
     revalidatePath(`/game/${universeId}`);
   }
 
-  return NextResponse.json({ universe_id: universeId, results });
+  // first_tagger バッジ判定（1リクエスト=1ゲームに対して1回）
+  let firstTaggerAwarded = false;
+  if (hasChanged) {
+    try {
+      firstTaggerAwarded = await maybeAwardFirstTagger(
+        supabase,
+        accountId,
+        universeId
+      );
+    } catch (e) {
+      console.error('[api/tags POST] maybeAwardFirstTagger', e);
+    }
+  }
+
+  return NextResponse.json({
+    universe_id: universeId,
+    results,
+    first_tagger_awarded: firstTaggerAwarded,
+  });
 }
 
 function normalizeTagIds(body: unknown): string[] | null {
