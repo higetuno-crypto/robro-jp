@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getRanking } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { formatRelativeJa } from '@/lib/format';
+
+export const metadata: Metadata = {
+  title: '全世界総合 Roblox ゲームランキング',
+  description: '全世界の Roblox ゲームを最新スナップショットの CCU 順で並べた総合ランキング TOP100。',
+  alternates: { canonical: 'https://ro-brojp.com/global' },
+};
 
 /**
  * 全世界総合ランキング（/global）

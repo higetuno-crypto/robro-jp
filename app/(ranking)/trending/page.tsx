@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getRanking } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { formatRelativeJa } from '@/lib/format';
+
+export const metadata: Metadata = {
+  title: '急上昇 Roblox ゲームランキング',
+  description: '前回スナップショットからの CCU 伸び率で並べた急上昇 Roblox ゲーム TOP100。',
+  alternates: { canonical: 'https://ro-brojp.com/trending' },
+};
 
 /**
  * 急上昇ランキング（/trending）

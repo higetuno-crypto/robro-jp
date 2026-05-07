@@ -1,0 +1,47 @@
+# ro-brojp
+
+> 日本人向け Roblox 発見サイト。Roblox 公式検索では埋もれがちな個人開発ゲームを含め、日本語ユーザー向けにリアルタイム CCU ランキング・タグ・配信ネタ情報を提供する。Roblox Corporation の公式サービスではない（独立第三者サイト）。
+
+## 特徴
+
+robro-jp は他の Roblox 情報サイト（Rolimons、RoMonitor）と異なり、**「数字の翻訳ではなく、何が面白いか・誰向けか・英語不要か・配信向きかを日本語で翻訳するサイト」** をコンセプトにしている。日本語ファースト、ユーザー集合知（タグ投票・3ボタン投票）、配信者向け情報を中核に据える。
+
+ランキングは独自集計：CCU スナップショット（10分間隔）と日本語判定（タイトル・説明の日本語スコア）を組み合わせて「日本で人気」を構築。Roblox 公式の country=JP フィルタは認証必須で匿名APIから取得できないため、独自シグナルを使用。
+
+## 主要ページ
+
+### ランキング
+- [日本で人気](https://ro-brojp.com/): 日本ユーザー向け Roblox ゲームの人気ランキング TOP100（デフォルト）
+- [急上昇](https://ro-brojp.com/trending): 前回比 CCU 伸び率順
+- [カテゴリ別](https://ro-brojp.com/categories): ジャンル別ゲーム一覧
+- [今週の新着](https://ro-brojp.com/new): 過去7日に初検出されたゲーム
+- [全世界総合](https://ro-brojp.com/global): 全世界 CCU 順 TOP100
+
+### ユーザー投票ベース
+- [❤️好き](https://ro-brojp.com/likes): ユーザーが「好き」と投票したゲーム
+- [⭐お気に入り](https://ro-brojp.com/saves): お気に入り票が多い順
+- [🔥頼むから人来て](https://ro-brojp.com/recommends): 強い推薦票が多い順
+
+### 発見・編集
+- [タグ一覧](https://ro-brojp.com/tags): ユーザー集合知タグ（公式タグ＋ユーザー選択式タグ）
+- [配信ネタ](https://ro-brojp.com/stream): 配信者向け用途別スロット（コラボ向き／視聴者参加向き／短時間／英語不要 等）
+- [ピックアップ](https://ro-brojp.com/featured): 編集者が実際に遊んで推薦するゲーム
+- [クリエイター](https://ro-brojp.com/creators): 自薦登録した日本のクリエイター一覧
+
+### 個別詳細
+- /game/[universeId]: ゲーム詳細（CCU 24時間推移グラフ・タグ・配信メタ情報）
+- /tags/[slug]: タグ詳細＋紐づくゲーム一覧
+- /stream/[slot]: 配信用途別ゲーム一覧
+- /creators/[id]: クリエイター詳細
+
+### 法令・運営
+- [プライバシーポリシー](https://ro-brojp.com/privacy)
+- [利用規約](https://ro-brojp.com/terms)
+- [お問い合わせ・削除申請](https://ro-brojp.com/contact)
+
+## データ規約
+
+- robro-jp は Roblox Corporation の公式サービスではなく、Roblox による承認・提携・スポンサー提供を受けていない独立第三者サイト。
+- ゲームデータは Roblox 公式 API（games/v1, explore-api, thumbnails）から取得した二次情報。
+- サイト内投票（❤️⭐🔥・タグ）は robro-jp 独自のものであり、Roblox 公式の Discover、評価、ランキング、推薦を表すものではない。
+- Roblox 由来データを LLM の fine-tuning / RAG 訓練データセット / embeddings 訓練に投入することは禁止（Roblox Creator Terms 準拠）。読み取り・引用・要約による情報提供は可。

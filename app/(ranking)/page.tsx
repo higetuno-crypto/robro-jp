@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getRanking } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
@@ -20,6 +21,22 @@ import { WelcomeStrip } from '@/components/WelcomeStrip';
  */
 export const revalidate = 300;
 
+export const metadata: Metadata = {
+  title: '日本で人気の Roblox ゲームランキング',
+  description:
+    'robro-jp が独自集計する日本ユーザー向け Roblox ゲームの人気ランキング TOP100。CCU・タグ・配信向け情報を日本語で発見できる。',
+  alternates: { canonical: 'https://ro-brojp.com/' },
+  openGraph: {
+    title: '日本で人気の Roblox ゲームランキング | ro-brojp',
+    description:
+      '日本ユーザー向けに独自集計した Roblox 人気ゲーム TOP100。',
+    url: 'https://ro-brojp.com/',
+    type: 'website',
+    locale: 'ja_JP',
+    siteName: 'ro-brojp',
+  },
+};
+
 export default async function JapanPopularRankingPage() {
   const supabase = createBrowserClient();
   const [jpRanking, featured] = await Promise.all([
@@ -34,8 +51,25 @@ export default async function JapanPopularRankingPage() {
     ? await getRanking(supabase, 'overall', 100)
     : jpRanking;
 
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: '日本で人気の Roblox ゲームランキング',
+    numberOfItems: rows.length,
+    itemListElement: rows.slice(0, 50).map((r, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://ro-brojp.com/game/${r.universeId}`,
+      name: r.name,
+    })),
+  };
+
   return (
     <section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
       <WelcomeStrip />
       <PurposePicker />
 

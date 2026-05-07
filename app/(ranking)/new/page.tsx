@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getRanking } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { formatRelativeJa } from '@/lib/format';
+
+export const metadata: Metadata = {
+  title: '今週の新着 Roblox ゲーム',
+  description: '過去7日間に robro-jp が初めて検出した新着 Roblox ゲームを CCU 順で表示。',
+  alternates: { canonical: 'https://ro-brojp.com/new' },
+};
 
 /**
  * 今週の新着ランキング（/new）

@@ -56,8 +56,26 @@ export default async function TagDetailPage({
 
   const games = await fetchGamesForTag(supabase, slug, 50);
 
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${tag.tagName} タグの Roblox ゲーム`,
+    description: tag.description ?? undefined,
+    numberOfItems: games.length,
+    itemListElement: games.map((g, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://ro-brojp.com/game/${g.universeId}`,
+      name: g.name,
+    })),
+  };
+
   return (
     <main className="max-w-3xl mx-auto px-3 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
       <nav className="text-[12px] text-muted-foreground mb-3">
         <Link href="/tags" className="hover:underline">
           ← タグ一覧

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createBrowserClient } from '@/lib/supabase';
 import { fetchGameDetail, fetchRecentSnapshots } from '@/lib/game-detail-query';
@@ -27,6 +28,46 @@ import { ReportButton } from '@/components/ReportButton';
  */
 
 export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { universeId: string };
+}): Promise<Metadata> {
+  const universeId = Number(params.universeId);
+  if (!Number.isFinite(universeId) || universeId <= 0) {
+    return { title: 'ゲームが見つかりません' };
+  }
+  const supabase = createBrowserClient();
+  const game = await fetchGameDetail(supabase, universeId).catch(() => null);
+  if (!game) return { title: 'ゲームが見つかりません' };
+
+  const desc = game.description
+    ? game.description.replace(/\s+/g, ' ').slice(0, 160)
+    : `${game.name}（${game.creatorName ?? '開発者不明'}）の Roblox ゲーム情報、現在CCU、24時間推移、タグ、配信向け情報。`;
+  const url = `https://ro-brojp.com/game/${universeId}`;
+
+  return {
+    title: game.name,
+    description: desc,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${game.name} | ro-brojp`,
+      description: desc,
+      url,
+      type: 'article',
+      images: game.thumbnailUrl ? [{ url: game.thumbnailUrl }] : undefined,
+      locale: 'ja_JP',
+      siteName: 'ro-brojp',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: game.name,
+      description: desc,
+      images: game.thumbnailUrl ? [game.thumbnailUrl] : undefined,
+    },
+  };
+}
 
 export default async function GameDetailPage({
   params,
@@ -69,8 +110,59 @@ export default async function GameDetailPage({
     ? `https://www.roblox.com/games/${game.placeId}`
     : null;
 
+  const totalVotes = voteCounts.like + voteCounts.save + voteCounts.recommend;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoGame',
+    name: game.name,
+    description: game.description?.slice(0, 500) ?? undefined,
+    url: `https://ro-brojp.com/game/${universeId}`,
+    image: game.thumbnailUrl ?? undefined,
+    inLanguage: game.isJapanese ? 'ja' : undefined,
+    gamePlatform: 'Roblox',
+    author: game.creatorName
+      ? {
+          '@type': game.creatorType === 'Group' ? 'Organization' : 'Person',
+          name: game.creatorName,
+        }
+      : undefined,
+    sameAs: robloxUrl ?? undefined,
+    aggregateRating:
+      totalVotes > 0
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: totalVotes > 0
+              ? (
+                  (voteCounts.like + voteCounts.save * 2 + voteCounts.recommend * 4.2) /
+                  (totalVotes * 4.2) *
+                  5
+                ).toFixed(2)
+              : undefined,
+            ratingCount: totalVotes,
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined,
+  };
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'ランキング', item: 'https://ro-brojp.com/' },
+      { '@type': 'ListItem', position: 2, name: game.name, item: `https://ro-brojp.com/game/${universeId}` },
+    ],
+  };
+
   return (
     <section className="max-w-3xl mx-auto px-3 py-3">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       {/* パンくず */}
       <div className="text-[13px] text-muted-foreground mb-3">
         <Link href="/" className="hover:underline">

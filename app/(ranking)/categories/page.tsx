@@ -1,6 +1,13 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getCategorySummaries } from '@/lib/ranking-query';
+
+export const metadata: Metadata = {
+  title: 'カテゴリ別 Roblox ゲーム一覧',
+  description: 'Roblox ゲームをジャンル・カテゴリで絞り込んで発見できる一覧ページ。',
+  alternates: { canonical: 'https://ro-brojp.com/categories' },
+};
 
 /**
  * カテゴリ一覧（/categories）

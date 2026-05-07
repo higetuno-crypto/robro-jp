@@ -58,6 +58,28 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen bg-background">
+        <Script
+          id="ld-organization"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'ro-brojp',
+              alternateName: '日本人向け Roblox 発見サイト',
+              url: 'https://ro-brojp.com',
+              inLanguage: 'ja',
+              description:
+                '日本語圏向け Roblox ゲームのリアルタイム CCU ランキング・タグ・配信ネタ・クリエイター発見サイト',
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: 'https://ro-brojp.com/search?q={search_term_string}',
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
         <SiteHeader />
         {children}
         <SiteFooter />
