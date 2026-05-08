@@ -70,8 +70,25 @@ export default async function TagsIndexPage({
       })
     : allTags;
 
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'robro-jp タグ一覧',
+    numberOfItems: tags.length,
+    itemListElement: tags.slice(0, 100).map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://ro-brojp.com/tags/${encodeURIComponent(t.tagId)}`,
+      name: t.tagName,
+    })),
+  };
+
   return (
     <main className="max-w-3xl mx-auto px-3 py-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
       <header className="mb-4">
         <h1 className="text-[18px] font-semibold">タグ一覧</h1>
         <p className="mt-1 text-[12px] text-muted-foreground">

@@ -46,6 +46,7 @@ export async function generateMetadata({
     ? game.description.replace(/\s+/g, ' ').slice(0, 160)
     : `${game.name}（${game.creatorName ?? '開発者不明'}）の Roblox ゲーム情報、現在CCU、24時間推移、タグ、配信向け情報。`;
   const url = `https://ro-brojp.com/game/${universeId}`;
+  const ogImage = `https://ro-brojp.com/api/og/game/${universeId}`;
 
   return {
     title: game.name,
@@ -56,7 +57,7 @@ export async function generateMetadata({
       description: desc,
       url,
       type: 'article',
-      images: game.thumbnailUrl ? [{ url: game.thumbnailUrl }] : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
       locale: 'ja_JP',
       siteName: 'ro-brojp',
     },
@@ -64,7 +65,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title: game.name,
       description: desc,
-      images: game.thumbnailUrl ? [game.thumbnailUrl] : undefined,
+      images: [ogImage],
     },
   };
 }
@@ -276,6 +277,38 @@ export default async function GameDetailPage({
         <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
         <TrendChart data={snaps} />
       </div>
+
+      {/* 内部リンク：このゲームのタグから関連ゲームを辿れる導線（クローラビリティ＆滞在向上） */}
+      {(tagBundle.official.length > 0 || tagBundle.community.length > 0) && (
+        <nav className="mt-8 border-t border-border pt-4">
+          <div className="text-[13px] text-muted-foreground mb-2">同じタグのゲームを探す</div>
+          <ul className="flex flex-wrap gap-2">
+            {[...tagBundle.official, ...tagBundle.community].slice(0, 8).map((t) => (
+              <li key={t.tagId}>
+                <Link
+                  href={`/tags/${encodeURIComponent(t.tagId)}`}
+                  className="inline-flex items-center text-[12px] leading-none px-2 py-1 border border-border hover:bg-muted"
+                >
+                  #{t.tagName}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      {/* 主要ランキングへの導線（孤立ページ防止 + 内部リンクハブ） */}
+      <nav className="mt-6 border-t border-border pt-4">
+        <div className="text-[13px] text-muted-foreground mb-2">他のランキングを見る</div>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+          <li><Link href="/" className="underline">日本で人気</Link></li>
+          <li><Link href="/trending" className="underline">急上昇</Link></li>
+          <li><Link href="/recommends" className="underline">🔥頼むから人来て</Link></li>
+          <li><Link href="/new" className="underline">新着</Link></li>
+          <li><Link href="/featured" className="underline">ピックアップ</Link></li>
+          <li><Link href="/stream" className="underline">配信ネタ</Link></li>
+        </ul>
+      </nav>
 
       <div className="mt-6 text-right">
         <ReportButton targetType="game" targetId={Number(game.universeId)} />

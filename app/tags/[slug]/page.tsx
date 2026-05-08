@@ -28,11 +28,31 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const supabase = createBrowserClient();
-  const tag = await fetchTagBySlug(supabase, decodeURIComponent(params.slug));
+  const slug = decodeURIComponent(params.slug);
+  const tag = await fetchTagBySlug(supabase, slug);
   if (!tag) return { title: 'タグが見つかりません' };
+  const url = `https://ro-brojp.com/tags/${encodeURIComponent(slug)}`;
+  const ogImage = `https://ro-brojp.com/api/og/tag/${encodeURIComponent(slug)}`;
+  const desc = tag.description ?? `${tag.tagName} タグが付けられた Roblox ゲーム一覧。`;
   return {
     title: `${tag.tagName}タグのゲーム`,
-    description: tag.description ?? `${tag.tagName} タグが付けられた Roblox ゲーム一覧`,
+    description: desc,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `#${tag.tagName} | ro-brojp`,
+      description: desc,
+      url,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+      locale: 'ja_JP',
+      siteName: 'ro-brojp',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `#${tag.tagName}`,
+      description: desc,
+      images: [ogImage],
+    },
   };
 }
 
