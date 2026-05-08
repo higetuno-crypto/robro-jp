@@ -13,9 +13,60 @@ export const metadata: Metadata = {
  * UI思想：ランキングページの淡々トーンではなく、ピックアップ寄りの温かいトーン。
  * カード型・章立てで若年層にも読みやすく。スクショは後日追加。
  */
+const FAQ_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'ro-brojp とは何ですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '日本語ユーザー向けの Roblox ゲーム発見サイトです。日本で人気のゲームをリアルタイムCCUで集計し、タグや配信向け情報を日本語で提供します。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'タグはどうやって付けますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'ゲーム詳細ページの「タグを付ける」ボタンから、運営が用意したプールの中から最大5件まで選んで投票できます。同じゲームの同じタグには24時間に1票までです。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '配信ネタはどこで探せますか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'ヘッダーの「配信」タブ（/stream）から、コラボ向き・視聴者参加・短時間・リアクション・英語不要・叫ぶ系の6つの用途別にゲームを探せます。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'ro-brojp は Roblox の公式サイトですか？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'いいえ。ro-brojp は Roblox Corporation の公式サービスではなく、Roblox による承認・提携・スポンサー提供を受けていない独立した非公式サイトです。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'ログインに必要なものは？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Google アカウントでログインできます。ro-brojp はメールアドレスと表示名以外の情報を取得しません。Roblox アカウントとの連携（OAuth）は行いません。',
+      },
+    },
+  ],
+};
+
 export default function GuidePage() {
   return (
     <main className="max-w-3xl mx-auto px-3 py-6 text-[14px] leading-relaxed space-y-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_LD) }}
+      />
       <header className="space-y-2">
         <h1 className="text-[22px] font-semibold">このサイトの使い方</h1>
         <p className="text-[13px] text-muted-foreground">

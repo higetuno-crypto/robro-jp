@@ -1,8 +1,26 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getRanking, getCategorySummaries } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { formatRelativeJa } from '@/lib/format';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const slug = decodeURIComponent(params.slug);
+  const supabase = createBrowserClient();
+  const categories = await getCategorySummaries(supabase).catch(() => []);
+  const current = categories.find((c) => c.slug === slug);
+  const label = current?.label ?? slug;
+  return {
+    title: `${label} の Roblox ゲーム`,
+    description: `${label} カテゴリの Roblox ゲームを CCU 順で並べたランキング。`,
+    alternates: { canonical: `https://ro-brojp.com/categories/${slug}` },
+  };
+}
 
 /**
  * カテゴリ別ランキング（/categories/[slug]）

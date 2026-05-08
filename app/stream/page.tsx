@@ -20,8 +20,25 @@ export default async function StreamHubPage() {
     fetchSlotGameCounts(supabase),
   ]);
 
+  const itemListLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Roblox 配信ネタ用途別スロット',
+    numberOfItems: slots.length,
+    itemListElement: slots.map((s, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://ro-brojp.com/stream/${s.slotKey}`,
+      name: s.displayName,
+    })),
+  };
+
   return (
     <section className="max-w-3xl mx-auto px-3 py-3">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
       <header className="mb-4">
         <h1 className="text-[18px] font-semibold">今夜の配信ネタを探す</h1>
         <p className="mt-1 text-[13px] text-muted-foreground">

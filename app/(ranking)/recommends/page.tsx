@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getVoteRanking } from '@/lib/vote-ranking-query';
 import { VoteRankingRow } from '@/components/VoteRankingRow';
+
+export const metadata: Metadata = {
+  title: '🔥 頼むから人来て ランキング',
+  description:
+    '「もっと知られてほしい」と思った Roblox ゲームに🔥を投じる、robro-jp 独自の隠れ良作ランキング TOP100。',
+  alternates: { canonical: 'https://ro-brojp.com/recommends' },
+};
 
 /**
  * 「頼むから人来て」ランキング（/recommends）

@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getVoteRanking } from '@/lib/vote-ranking-query';
 import { VoteRankingRow } from '@/components/VoteRankingRow';
+
+export const metadata: Metadata = {
+  title: '❤️ 好き ランキング',
+  description:
+    'ユーザーが「❤️好き」を押した数（ベイズ平均）で並べた Roblox ゲームランキング TOP100。',
+  alternates: { canonical: 'https://ro-brojp.com/likes' },
+};
 
 /**
  * 好きランキング（/likes）

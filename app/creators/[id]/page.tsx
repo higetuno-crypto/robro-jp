@@ -1,8 +1,41 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import { getCreatorById, listCreatorGames, toPublic } from '@/lib/creators';
 import { ReportButton } from '@/components/ReportButton';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const id = Number.parseInt(params.id, 10);
+  if (!Number.isFinite(id) || id <= 0) return { title: 'クリエイターが見つかりません' };
+  const ssrSupa = createSupabaseServerClient();
+  const creator = await getCreatorById(ssrSupa, id).catch(() => null);
+  if (!creator || !creator.is_verified) {
+    return { title: 'クリエイター', robots: { index: false } };
+  }
+  const pub = toPublic(creator);
+  const desc = pub.self_introduction
+    ? pub.self_introduction.replace(/\s+/g, ' ').slice(0, 160)
+    : `${pub.display_name} の Roblox クリエイタープロフィール（robro-jp 確認済み）。`;
+  const url = `https://ro-brojp.com/creators/${id}`;
+  return {
+    title: pub.display_name,
+    description: desc,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${pub.display_name} | ro-brojp`,
+      description: desc,
+      url,
+      type: 'profile',
+      images: pub.avatar_url ? [{ url: pub.avatar_url }] : undefined,
+      locale: 'ja_JP',
+    },
+  };
+}
 
 /**
  * /creators/[id] クリエイター詳細ページ（フェーズ10）
@@ -47,8 +80,29 @@ export default async function CreatorDetailPage({ params }: PageProps) {
   const pub = toPublic(creator);
   const games = await listCreatorGames(ssrSupa, id);
 
+  const personLd = isPublic
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: pub.display_name,
+        url: `https://ro-brojp.com/creators/${id}`,
+        image: pub.avatar_url ?? undefined,
+        description: pub.self_introduction ?? undefined,
+        sameAs: [
+          pub.roblox_profile_url,
+          ...pub.social_links.map((sl) => sl.url),
+        ].filter(Boolean),
+      }
+    : null;
+
   return (
     <main className="max-w-3xl mx-auto px-3 py-4">
+      {personLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }}
+        />
+      )}
       {!isPublic && canPreview ? (
         <div className="mb-4 border border-amber-500 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-[12px]">
           このプロフィールは未確認状態です。本人のみ閲覧できます。

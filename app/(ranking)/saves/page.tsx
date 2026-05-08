@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { createBrowserClient } from '@/lib/supabase';
 import { getVoteRanking } from '@/lib/vote-ranking-query';
 import { VoteRankingRow } from '@/components/VoteRankingRow';
+
+export const metadata: Metadata = {
+  title: '⭐ お気に入り ランキング',
+  description:
+    'ユーザーが「⭐お気に入り」を押した数（ベイズ平均）で並べた Roblox ゲームランキング TOP100。',
+  alternates: { canonical: 'https://ro-brojp.com/saves' },
+};
 
 /**
  * お気に入りランキング（/saves）
