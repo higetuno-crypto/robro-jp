@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS analytics_snapshots (
   captured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   period_start DATE NOT NULL,
   period_end DATE NOT NULL,
-  source TEXT NOT NULL CHECK (source IN ('supabase','gsc','ga4','vercel','nim')),
+  source TEXT NOT NULL CHECK (source IN ('supabase','gsc','ga4','vercel')),
+  -- v2.1: 'nim' を削除（NVIDIA NIM 採用見送り。すべて Claude で処理）
   metrics JSONB NOT NULL,
   validation_checksum TEXT,  -- 中核 KPI のハッシュ（ハルシネーション検出用）
   CONSTRAINT analytics_snapshots_unique_period UNIQUE (period_start, period_end, source)
@@ -66,8 +67,8 @@ COMMENT ON COLUMN analytics_insights.insight_type IS
   'contrarian = Yuki の bias 増幅防止のため、過去 rejected と逆方向の仮説（仕様書 §7.6）';
 
 -- ============================================================
--- analytics_classifications: NIM（または Claude）による分類結果キャッシュ
--- フェーズ A2 で使用開始（A0 で NVIDIA 規約 OK 後）
+-- analytics_classifications: Claude による分類結果キャッシュ
+-- フェーズ A2 で使用開始（v2.1: NIM は採用見送り、Claude 一本化）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS analytics_classifications (
   id BIGSERIAL PRIMARY KEY,
@@ -76,14 +77,14 @@ CREATE TABLE IF NOT EXISTS analytics_classifications (
   target_id TEXT NOT NULL,
   classification_type TEXT NOT NULL,    -- 'sentiment' | 'category'
   result JSONB NOT NULL,
-  model TEXT NOT NULL,                  -- 'meta/llama-3.3-70b-instruct' など
+  model TEXT NOT NULL,                  -- 'claude-sonnet-4.7' など（モデル世代の追跡用）
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT analytics_classifications_unique_target
     UNIQUE (target_type, target_id, classification_type, model)
 );
 
 COMMENT ON TABLE analytics_classifications IS
-  'NIM等の分類結果キャッシュ。6ヶ月で archive。v2 では feedback のみが対象。';
+  'Claude による分類結果キャッシュ。6ヶ月で archive。v2.1 では feedback のみが対象。';
 
 -- ============================================================
 -- RLS（Row Level Security）：anon は読み書き不可、service role のみ操作可

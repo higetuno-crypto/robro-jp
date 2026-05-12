@@ -2,7 +2,7 @@
 
 このファイルは Claude Code が「冷スタート」で隔週サイクルを実行できるようにするための手順書とプロンプトテンプレ集です。
 
-対応仕様書：`higesakusei/analytics-spec-v2.md`
+対応仕様書：`higesakusei/analytics-spec-v2.1.md`（v2.1 で NIM 採用見送り → Claude 一本化）
 最終更新：2026-05-09
 バージョン：v1.0
 
@@ -13,7 +13,7 @@
 Claude Code が「隔週レポート作って」と頼まれたら、まず以下の順で読みます：
 
 1. このファイル（RUNBOOK）の §1〜§5
-2. `higesakusei/analytics-spec-v2.md` の §2（KPI 定義）、§7（ループ仕様）
+2. `higesakusei/analytics-spec-v2.1.md` の §2（KPI 定義）、§7（ループ仕様）
 3. `CLAUDE.md` の「ビジョン」「UI設計原則」「やらないこと」
 4. 直近 8 期分の `analytics_insights`（DB クエリ）
 
