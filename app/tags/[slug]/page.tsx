@@ -22,11 +22,12 @@ const GROUP_LABEL: Record<TagGroup, string> = {
   genre: 'ジャンル',
 };
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const supabase = createBrowserClient();
   const slug = decodeURIComponent(params.slug);
   const tag = await fetchTagBySlug(supabase, slug);
@@ -64,11 +65,12 @@ export async function generateMetadata({
  * 行の見た目はランキングと似せつつ、順位の色差は省く（ランキングページではないため）。
  */
 
-export default async function TagDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function TagDetailPage(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
   const slug = decodeURIComponent(params.slug);
   const supabase = createBrowserClient();
   const tag = await fetchTagBySlug(supabase, slug);

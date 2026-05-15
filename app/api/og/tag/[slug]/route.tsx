@@ -7,10 +7,8 @@ export const runtime = 'edge';
 
 const SIZE = { width: 1200, height: 630 };
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(_req: Request, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = decodeURIComponent(params.slug);
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',

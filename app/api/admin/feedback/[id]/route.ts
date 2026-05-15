@@ -17,10 +17,8 @@ const VALID_STATUSES: FeedbackStatus[] = [
   'open', 'under_review', 'planned', 'in_progress', 'done', 'declined', 'duplicate',
 ];
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const postId = Number(params.id);
   if (!Number.isFinite(postId) || postId <= 0) {
     return NextResponse.json({ error: 'invalid post id' }, { status: 400 });

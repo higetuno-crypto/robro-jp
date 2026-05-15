@@ -48,11 +48,12 @@ function parseView(v: string | undefined): View {
   return 'popular';
 }
 
-export default async function TagsIndexPage({
-  searchParams,
-}: {
-  searchParams: { view?: string; q?: string };
-}) {
+export default async function TagsIndexPage(
+  props: {
+    searchParams: Promise<{ view?: string; q?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const view = parseView(searchParams.view);
   const q = (searchParams.q ?? '').trim().slice(0, 60);
   const supabase = createBrowserClient();

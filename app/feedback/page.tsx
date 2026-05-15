@@ -33,14 +33,15 @@ const VALID_SORTS = ['popular', 'new'] as const;
 type Sort = (typeof VALID_SORTS)[number];
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     sort?: string;
     status?: string;
     category?: string;
-  };
+  }>;
 }
 
-export default async function FeedbackPage({ searchParams }: PageProps) {
+export default async function FeedbackPage(props: PageProps) {
+  const searchParams = await props.searchParams;
   const sort: Sort = (VALID_SORTS as readonly string[]).includes(searchParams.sort ?? '')
     ? (searchParams.sort as Sort)
     : 'popular';

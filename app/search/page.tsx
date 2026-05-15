@@ -30,11 +30,12 @@ interface DbHit {
   playing: number | null;
 }
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: { q?: string };
-}) {
+export default async function SearchPage(
+  props: {
+    searchParams: Promise<{ q?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? '').trim().slice(0, 100);
 
   if (!q) {
@@ -176,12 +177,12 @@ function ResultRow({
         <div className="w-[48px] h-[48px] bg-muted overflow-hidden shrink-0">
           {thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
+            (<img
               src={thumbnailUrl}
               alt=""
               className="w-full h-full object-cover"
               loading="lazy"
-            />
+            />)
           ) : null}
         </div>
         <div className="flex-1 min-w-0">

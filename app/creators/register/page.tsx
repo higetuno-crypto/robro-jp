@@ -30,7 +30,7 @@ export default async function CreatorRegisterPage() {
     redirect('/login?next=/creators/register');
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const existing = await getCreatorByAccountId(supabase, user.id);
 
   return (

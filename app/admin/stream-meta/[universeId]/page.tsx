@@ -17,11 +17,12 @@ async function fetchGame(universeId: number) {
   return data;
 }
 
-export default async function AdminStreamMetaPage({
-  params,
-}: {
-  params: { universeId: string };
-}) {
+export default async function AdminStreamMetaPage(
+  props: {
+    params: Promise<{ universeId: string }>;
+  }
+) {
+  const params = await props.params;
   const universeId = Number(params.universeId);
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 

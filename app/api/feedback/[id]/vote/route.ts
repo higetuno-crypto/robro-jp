@@ -12,10 +12,8 @@ import { toggleVote } from '@/lib/feedback';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const postId = Number(params.id);
   if (!Number.isFinite(postId) || postId <= 0) {
     return NextResponse.json({ error: 'invalid post id' }, { status: 400 });

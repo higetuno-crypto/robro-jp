@@ -6,15 +6,17 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 /**
  * フェーズ6：Supabase Auth（Cookieベース）サーバーサイドクライアント。
  *
- * - Server Component / Route Handler から `createSupabaseServerClient()` を使う
+ * - Server Component / Route Handler から `await createSupabaseServerClient()` を使う
  * - Client Component からは `lib/supabase-browser.ts` の `createSupabaseClientClient()` を使う
+ *
+ * Next.js 15 以降、`cookies()` は async になったため当関数も async。
  */
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
-export function createSupabaseServerClient(): SupabaseClient {
-  const store = cookies();
+export async function createSupabaseServerClient(): Promise<SupabaseClient> {
+  const store = await cookies();
   return createServerClient(url, anon, {
     cookies: {
       get(name: string) {
@@ -39,7 +41,7 @@ export function createSupabaseServerClient(): SupabaseClient {
 }
 
 export async function getCurrentUser() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

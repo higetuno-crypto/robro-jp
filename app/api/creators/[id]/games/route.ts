@@ -43,10 +43,8 @@ async function authorizeCreator(creatorId: number, userIdAuth: string) {
   return { creator, supabase };
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'login required' }, { status: 401 });
 
@@ -242,10 +240,8 @@ export async function POST(
   });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'login_required' }, { status: 401 });
 
@@ -285,10 +281,8 @@ export async function DELETE(
  *  body: { is_primary: boolean }
  *  既存の自薦の is_primary だけを切り替える。
  */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: 'login_required' }, { status: 401 });
 

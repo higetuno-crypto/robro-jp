@@ -5,11 +5,12 @@ import { getRanking, getCategorySummaries } from '@/lib/ranking-query';
 import { RankingRow } from '@/components/RankingRow';
 import { formatRelativeJa } from '@/lib/format';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const slug = decodeURIComponent(params.slug);
   const supabase = createBrowserClient();
   const categories = await getCategorySummaries(supabase).catch(() => []);
@@ -30,11 +31,12 @@ export async function generateMetadata({
  */
 export const revalidate = 300;
 
-export default async function CategoryRankingPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default async function CategoryRankingPage(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+) {
+  const params = await props.params;
   const slug = decodeURIComponent(params.slug);
   const supabase = createBrowserClient();
   const [{ rows, capturedAt }, categories] = await Promise.all([

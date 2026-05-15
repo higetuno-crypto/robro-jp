@@ -36,10 +36,8 @@ function parseUniverseId(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { universeId: string } }
-) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ universeId: string }> }) {
+  const params = await props.params;
   const universeId = parseUniverseId(params.universeId);
   if (universeId === null) {
     return NextResponse.json({ error: 'invalid universeId' }, { status: 400 });
@@ -51,7 +49,7 @@ export async function GET(
     let userState = { like: false, save: false, recommend: false };
     const user = await getCurrentUser();
     if (user) {
-      const ssr = createSupabaseServerClient();
+      const ssr = await createSupabaseServerClient();
       userState = await fetchUserVoteState(ssr, universeId, user.id);
     }
 
@@ -71,10 +69,8 @@ export async function GET(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { universeId: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ universeId: string }> }) {
+  const params = await props.params;
   const universeId = parseUniverseId(params.universeId);
   if (universeId === null) {
     return NextResponse.json({ error: 'invalid universeId' }, { status: 400 });
@@ -107,7 +103,7 @@ export async function POST(
     return NextResponse.json({ error: 'invalid action' }, { status: 400 });
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // 既存状態と矛盾しない操作か確認
   const active = await hasActiveVote(supabase, universeId, buttonType as ButtonType, accountId);
