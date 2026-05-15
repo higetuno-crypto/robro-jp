@@ -9,11 +9,22 @@ export const dynamic = 'force-dynamic';
  * /auth/callback?code=xxx&next=/... で来る。
  * code を session に交換して next にリダイレクト。
  */
+/**
+ * `next` パラメータをローカル相対パスに正規化する。
+ *   - 先頭が `/` で始まり、かつ protocol-relative `//evil.com` でないものだけ受け入れる
+ *   - app/login/page.tsx と挙動を揃える
+ */
+function safeNext(raw: string | null): string {
+  if (!raw) return '/';
+  if (!raw.startsWith('/')) return '/';
+  if (raw.startsWith('//')) return '/';
+  return raw;
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = new URL(req.url);
   const code = searchParams.get('code');
-  const rawNext = searchParams.get('next') ?? '/';
-  const next = rawNext.startsWith('/') ? rawNext : '/';
+  const next = safeNext(searchParams.get('next'));
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);
