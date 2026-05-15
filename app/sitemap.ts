@@ -7,7 +7,6 @@ export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const supabase = createBrowserClient();
 
   const staticUrls: MetadataRoute.Sitemap = [
     '',
@@ -34,6 +33,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: path === '' || path === '/trending' ? 'hourly' : 'daily',
     priority: path === '' ? 1 : 0.7,
   }));
+
+  // Supabase の env が無いビルド環境（CI 等）では静的 URL だけ返す。
+  // 本番 Vercel では env が必ず設定されているので動的部分も生成される。
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return staticUrls;
+  }
+  const supabase = createBrowserClient();
 
   // 上位ゲーム詳細（CCU降順500件まで）
   const games: MetadataRoute.Sitemap = [];

@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# robro-jp
 
-## Getting Started
+日本語圏向けの Roblox ゲーム発見プラットフォーム（Next.js 14 + Supabase）。
+プロジェクトの背景・UI 原則・スキーマは [`CLAUDE.md`](./CLAUDE.md) を参照。
 
-First, run the development server:
+## セットアップ
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.local.example .env.local   # 後述の env を埋める
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開発サーバーは http://localhost:3000 で起動。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 必要な環境変数
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| 変数 | 用途 | 必須 |
+|------|------|------|
+| `NEXT_PUBLIC_SUPABASE_URL`         | Supabase プロジェクト URL                     | ✅（本番ビルド・実行） |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`    | Supabase anon key（クライアント／公開読み取り）| ✅（同上） |
+| `SUPABASE_SERVICE_ROLE_KEY`        | Supabase service role key（API ルート専用）   | ✅（API ルート実行時） |
+| `CRON_SECRET`                      | `/api/cron/*` の Bearer 認証用シークレット     | ✅（cron 実行時） |
+| `FINGERPRINT_SALT`                 | IP+UA ハッシュのソルト（投票重複防止用）       | ⛔（任意・未設定時は固定 salt） |
+| `NEXT_PUBLIC_FEATURE_PROMOTION`    | 宣伝機能フラグ（v4 では未使用）                | ⛔ |
 
-## Learn More
+- `SUPABASE_SERVICE_ROLE_KEY` は **絶対にクライアントに渡さない**。`lib/supabase.ts` の `createServiceClient` 経由でサーバー側のみ使用。
+- `CRON_SECRET` を未設定のまま cron エンドポイントを叩くと 401。
+- 環境変数が無い状態でも `pnpm build` は通る（`app/sitemap.ts` が動的部分をスキップして静的URLだけ返すように実装）。
 
-To learn more about Next.js, take a look at the following resources:
+## よく使うコマンド
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev                      # 開発サーバー
+pnpm build && pnpm start      # 本番ビルド + 起動
+pnpm lint                     # ESLint
+pnpm exec tsc --noEmit        # 型チェック
+pnpm audit --prod             # 本番依存の脆弱性スキャン
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ディレクトリ概要
 
-## Deploy on Vercel
+- `app/` … Next.js App Router（ランキング、タグ、配信、ご意見ボード、`/admin` 等）
+- `lib/` … Supabase クライアント、Roblox API ラッパ、投票・タグ・モデレーションのドメインロジック
+- `components/` … 共通 UI（`RankingRow`, `TagBadge`, `StreamMetaPanel` 等）
+- `supabase/migrations/` … 0001 → 番号順に流す SQL
+- `scripts/` … 一度だけ実行するメンテナンス系（`purge-roblox-data.ts` など）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 詳細
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 設計原則・規約 → [`CLAUDE.md`](./CLAUDE.md)
+- 仕様書・採否決定 → `higesakusei/` 配下

@@ -4,7 +4,6 @@ import { createBrowserClient, createServiceClient } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/supabase-ssr';
 import {
   fetchGameTags,
-  hasRecentVote,
   countRecentVotes,
   castVote,
   makeFingerprint,
@@ -18,9 +17,10 @@ import { maybeAwardFirstTagger } from '@/lib/badges';
  * POST /api/games/[universeId]/tags  → { tag_id } で1票投じる（選択式のみ）
  *
  * レートリミット（拡張ガイドライン#1 イベントログ型で算出）：
- *  - 同一 fingerprint × (universe, tag) = 24h内1票
- *  - 同一 fingerprint = 60秒あたり20票
- *  - 同一 fingerprint = 1日あたり50票
+ *  - 同一 account_id × (universe, tag) = 24h内1票（cast_tag_vote RPC で原子的に判定）
+ *  - 同一 account_id = 60秒あたり20票
+ *  - 同一 account_id = 1日あたり50票
+ *  fingerprint は引き続きログに残し、将来 BAN/解析時の補助シグナルとして保持。
  */
 
 export const runtime = 'nodejs';
@@ -102,8 +102,11 @@ export async function POST(
 
   const supabase = createServiceClient();
 
-  // 全体レート（60秒20票 / 1日50票）
-  const { last60s, last24h } = await countRecentVotes(supabase, fingerprint);
+  // 全体レート（60秒20票 / 1日50票）。ログイン必須なので accountId 起点で集計する
+  const { last60s, last24h } = await countRecentVotes(supabase, {
+    accountId,
+    fingerprint,
+  });
   if (last60s >= LIMIT_PER_MINUTE || last24h + tagIds.length > LIMIT_PER_DAY) {
     return NextResponse.json(
       { error: 'rate limit exceeded' },
@@ -152,18 +155,17 @@ export async function POST(
   }> = [];
 
   for (const tagId of tagIds) {
-    const already = await hasRecentVote(supabase, universeId, tagId, fingerprint);
-    if (already) {
-      results.push({ tag_id: tagId, status: 'duplicate' });
-      continue;
-    }
     try {
-      const { voteCount, confidenceScore } = await castVote(supabase, {
+      const { voteCount, confidenceScore, isDuplicate } = await castVote(supabase, {
         universeId,
         tagId,
         fingerprint,
         accountId,
       });
+      if (isDuplicate) {
+        results.push({ tag_id: tagId, status: 'duplicate' });
+        continue;
+      }
       results.push({
         tag_id: tagId,
         status: 'ok',

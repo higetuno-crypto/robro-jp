@@ -124,56 +124,45 @@ export async function fetchGameTags(
   return { official, community: community.slice(0, limit) };
 }
 
-/** fingerprint が同じ (universe, tag) に24h以内に投票しているかチェック */
-export async function hasRecentVote(
-  supabase: SupabaseClient,
-  universeId: number,
-  tagId: string,
-  fingerprint: string
-): Promise<boolean> {
-  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const { data, error } = await supabase
-    .from('game_tag_vote_logs')
-    .select('id')
-    .eq('universe_id', universeId)
-    .eq('tag_id', tagId)
-    .eq('fingerprint', fingerprint)
-    .gte('created_at', since)
-    .limit(1);
-  if (error) throw error;
-  return (data?.length ?? 0) > 0;
-}
-
-/** fingerprint の直近 60秒 / 1日の投票数（レートリミット判定用） */
+/**
+ * 直近 60秒 / 1日の投票数。
+ * accountId が与えられればそれを優先（ログイン済み = アプリの本来想定）。
+ * fingerprint フォールバックは、ログ前提を維持するための互換用。
+ */
 export async function countRecentVotes(
   supabase: SupabaseClient,
-  fingerprint: string
+  params: { accountId?: string | null; fingerprint?: string | null }
 ): Promise<{ last60s: number; last24h: number }> {
   const now = Date.now();
   const since60 = new Date(now - 60 * 1000).toISOString();
   const since24 = new Date(now - 24 * 3600 * 1000).toISOString();
+
+  const useAccount = !!params.accountId;
+  const column = useAccount ? 'account_id' : 'fingerprint';
+  const value = useAccount ? params.accountId! : params.fingerprint ?? '';
+
   const { count: c60, error: e60 } = await supabase
     .from('game_tag_vote_logs')
     .select('id', { count: 'exact', head: true })
-    .eq('fingerprint', fingerprint)
+    .eq(column, value)
     .gte('created_at', since60);
   if (e60) throw e60;
   const { count: c24, error: e24 } = await supabase
     .from('game_tag_vote_logs')
     .select('id', { count: 'exact', head: true })
-    .eq('fingerprint', fingerprint)
+    .eq(column, value)
     .gte('created_at', since24);
   if (e24) throw e24;
   return { last60s: c60 ?? 0, last24h: c24 ?? 0 };
 }
 
 /**
- * 投票をトランザクション的に適用：
- *  1. game_tag_vote_logs に insert
- *  2. game_tag_votes を upsert（vote_count++ / confidence_score 再計算）
- *
- * 注意：Supabase client では複数文のトランザクションは張れないため、
- * 整合性が厳密に必要になったら RPC（stored procedure）に移す（拡張ガイドライン#5）
+ * 投票を DB 側で原子的に適用する。
+ * migration 0015 の `cast_tag_vote` RPC を呼び、ログ INSERT と集計の +1 を
+ * 同一トランザクションで処理する（lost update を回避）。
+ * 24h 内の重複判定もアカウント優先で行う：
+ *   - account_id が non-null なら account_id ベース
+ *   - そうでなければ fingerprint ベース
  */
 export async function castVote(
   supabase: SupabaseClient,
@@ -183,41 +172,27 @@ export async function castVote(
     fingerprint: string;
     accountId?: string | null;
   }
-): Promise<{ voteCount: number; confidenceScore: number }> {
+): Promise<{ voteCount: number; confidenceScore: number; isDuplicate: boolean }> {
   const { universeId, tagId, fingerprint, accountId } = params;
 
-  const { error: logErr } = await supabase.from('game_tag_vote_logs').insert({
-    universe_id: universeId,
-    tag_id: tagId,
-    fingerprint,
-    account_id: accountId ?? null,
+  const { data, error } = await supabase.rpc('cast_tag_vote', {
+    p_universe_id: universeId,
+    p_tag_id: tagId,
+    p_account_id: accountId ?? null,
+    p_fingerprint: fingerprint,
   });
-  if (logErr) throw logErr;
+  if (error) throw error;
 
-  const { data: existing, error: selErr } = await supabase
-    .from('game_tag_votes')
-    .select('vote_count')
-    .eq('universe_id', universeId)
-    .eq('tag_id', tagId)
-    .maybeSingle();
-  if (selErr) throw selErr;
-
-  const newCount = (existing?.vote_count ?? 0) + 1;
-  const newScore = calcConfidence(newCount);
-
-  const { error: upErr } = await supabase.from('game_tag_votes').upsert(
-    {
-      universe_id: universeId,
-      tag_id: tagId,
-      vote_count: newCount,
-      confidence_score: newScore,
-      last_voted_at: new Date().toISOString(),
-    },
-    { onConflict: 'universe_id,tag_id' }
-  );
-  if (upErr) throw upErr;
-
-  return { voteCount: newCount, confidenceScore: newScore };
+  // RPC は SETOF を返すので配列の先頭を取る
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    throw new Error('cast_tag_vote returned no row');
+  }
+  return {
+    voteCount: row.vote_count as number,
+    confidenceScore: row.confidence_score as number,
+    isDuplicate: row.is_duplicate as boolean,
+  };
 }
 
 /** /tags 一覧用：タグマスタ + 集計（総得票数・紐付くゲーム数） */

@@ -9,13 +9,26 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * `next` パラメータをローカル相対パスに正規化する。
+ *   - 先頭が `/` で始まり、かつ `//` で始まらないものだけ受け入れる
+ *   - それ以外（外部URL、protocol-relative `//evil.com`、`javascript:` など）は `/` にフォールバック
+ *   - app/auth/callback/route.ts でも同じロジックを使う
+ */
+function safeNext(raw: unknown): string {
+  if (typeof raw !== 'string') return '/';
+  if (!raw.startsWith('/')) return '/';
+  if (raw.startsWith('//')) return '/';
+  return raw;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: { next?: string };
 }) {
   const user = await getCurrentUser();
-  const next = typeof searchParams.next === 'string' ? searchParams.next : '/';
+  const next = safeNext(searchParams.next);
   if (user) redirect(next);
   return (
     <div className="max-w-md mx-auto px-3 py-8">
