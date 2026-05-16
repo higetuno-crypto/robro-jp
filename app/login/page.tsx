@@ -22,11 +22,12 @@ function safeNext(raw: unknown): string {
   return raw;
 }
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { next?: string };
-}) {
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ next?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const user = await getCurrentUser();
   const next = safeNext(searchParams.next);
   if (user) redirect(next);

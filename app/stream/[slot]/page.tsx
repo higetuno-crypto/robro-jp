@@ -14,11 +14,12 @@ import { StreamBadgeList } from '@/components/stream/StreamBadge';
  */
 export const revalidate = 900;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slot: string };
-}) {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slot: string }>;
+  }
+) {
+  const params = await props.params;
   const supabase = createBrowserClient();
   const slot = await fetchSlotBySlug(supabase, params.slot).catch(() => null);
   const name = slot?.displayName ?? params.slot;
@@ -37,11 +38,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function StreamSlotPage({
-  params,
-}: {
-  params: { slot: string };
-}) {
+export default async function StreamSlotPage(
+  props: {
+    params: Promise<{ slot: string }>;
+  }
+) {
+  const params = await props.params;
   const supabase = createBrowserClient();
   const slot = await fetchSlotBySlug(supabase, params.slot);
   if (!slot) notFound();
@@ -75,12 +77,10 @@ export default async function StreamSlotPage({
         <span className="mx-1">/</span>
         <span>{slot.displayName}</span>
       </div>
-
       <header className="mb-4">
         <h1 className="text-[18px] font-semibold">{slot.displayName}</h1>
         <p className="mt-1 text-[13px] text-muted-foreground">{slot.description}</p>
       </header>
-
       {games.length === 0 ? (
         <p className="text-[13px] text-muted-foreground">
           該当するゲームがまだありません。タグ投票が集まると並び始めます。
@@ -96,12 +96,12 @@ export default async function StreamSlotPage({
                 <div className="w-[60px] h-[60px] bg-muted overflow-hidden shrink-0">
                   {g.thumbnailUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    (<img
                       src={g.thumbnailUrl}
                       alt=""
                       className="w-full h-full object-cover"
                       loading="lazy"
-                    />
+                    />)
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">

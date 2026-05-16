@@ -29,11 +29,12 @@ import { ReportButton } from '@/components/ReportButton';
 
 export const revalidate = 300;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { universeId: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ universeId: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const universeId = Number(params.universeId);
   if (!Number.isFinite(universeId) || universeId <= 0) {
     return { title: 'ゲームが見つかりません' };
@@ -70,11 +71,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function GameDetailPage({
-  params,
-}: {
-  params: { universeId: string };
-}) {
+export default async function GameDetailPage(
+  props: {
+    params: Promise<{ universeId: string }>;
+  }
+) {
+  const params = await props.params;
   const universeId = Number(params.universeId);
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
@@ -172,19 +174,18 @@ export default async function GameDetailPage({
         <span className="mx-1">/</span>
         <span>ゲーム詳細</span>
       </div>
-
       {/* 基本情報 */}
       <div className="flex gap-3">
         <div className="w-[96px] h-[96px] bg-muted overflow-hidden shrink-0">
           {game.thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
+            (<img
               src={game.thumbnailUrl}
               alt=""
               width={96}
               height={96}
               className="w-full h-full object-cover"
-            />
+            />)
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
@@ -202,7 +203,6 @@ export default async function GameDetailPage({
           )}
         </div>
       </div>
-
       {/* 3ボタン投票（フェーズ8） */}
       <div className="mt-4">
         <VoteButtons
@@ -214,7 +214,6 @@ export default async function GameDetailPage({
           }}
         />
       </div>
-
       {/* タグ */}
       {(tagBundle.official.length > 0 || tagBundle.community.length > 0 || allTags.length > 0) && (
         <div className="mt-4">
@@ -227,7 +226,6 @@ export default async function GameDetailPage({
           <TagCloud official={tagBundle.official} community={tagBundle.community} />
         </div>
       )}
-
       {/* 公式Robloxリンク */}
       <div className="mt-5">
         {robloxUrl ? (
@@ -245,7 +243,6 @@ export default async function GameDetailPage({
           </span>
         )}
       </div>
-
       {/* 概要 */}
       {game.description ? (
         <div className="mt-5">
@@ -255,7 +252,6 @@ export default async function GameDetailPage({
           </p>
         </div>
       ) : null}
-
       {/* 現在CCU */}
       <div className="mt-5 flex items-baseline gap-2">
         <div className="text-[13px] text-muted-foreground">現在CCU</div>
@@ -266,18 +262,15 @@ export default async function GameDetailPage({
           {latest ? formatRelativeJa(latest.capturedAt) : ''}
         </div>
       </div>
-
       {/* 配信者向け情報（メタ存在時のみ） */}
       {streamingMeta && (
         <StreamMetaPanel meta={streamingMeta} gameName={game.name} />
       )}
-
       {/* 24hグラフ */}
       <div className="mt-2">
         <div className="text-[13px] text-muted-foreground mb-1">24時間のCCU推移</div>
         <TrendChart data={snaps} />
       </div>
-
       {/* 内部リンク：このゲームのタグから関連ゲームを辿れる導線（クローラビリティ＆滞在向上） */}
       {(tagBundle.official.length > 0 || tagBundle.community.length > 0) && (
         <nav className="mt-8 border-t border-border pt-4">
@@ -296,7 +289,6 @@ export default async function GameDetailPage({
           </ul>
         </nav>
       )}
-
       {/* 主要ランキングへの導線（孤立ページ防止 + 内部リンクハブ） */}
       <nav className="mt-6 border-t border-border pt-4">
         <div className="text-[13px] text-muted-foreground mb-2">他のランキングを見る</div>
@@ -309,7 +301,6 @@ export default async function GameDetailPage({
           <li><Link href="/stream" className="underline">配信ネタ</Link></li>
         </ul>
       </nav>
-
       <div className="mt-6 text-right">
         <ReportButton targetType="game" targetId={Number(game.universeId)} />
       </div>

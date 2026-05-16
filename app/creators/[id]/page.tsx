@@ -5,14 +5,15 @@ import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import { getCreatorById, listCreatorGames, toPublic } from '@/lib/creators';
 import { ReportButton } from '@/components/ReportButton';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const id = Number.parseInt(params.id, 10);
   if (!Number.isFinite(id) || id <= 0) return { title: 'クリエイターが見つかりません' };
-  const ssrSupa = createSupabaseServerClient();
+  const ssrSupa = await createSupabaseServerClient();
   const creator = await getCreatorById(ssrSupa, id).catch(() => null);
   if (!creator || !creator.is_verified) {
     return { title: 'クリエイター', robots: { index: false } };
@@ -48,7 +49,7 @@ export async function generateMetadata({
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -59,13 +60,14 @@ const PLATFORM_LABELS: Record<string, string> = {
   blog: 'Blog',
 };
 
-export default async function CreatorDetailPage({ params }: PageProps) {
+export default async function CreatorDetailPage(props: PageProps) {
+  const params = await props.params;
   const id = Number.parseInt(params.id, 10);
   if (!Number.isFinite(id) || id <= 0) notFound();
 
   // verified 行は anon でも見えるが、未verified 行は本人セッションでしか見えない
   // → SSR クライアント（cookieベース）で取得して RLS の本人ポリシーを適用
-  const ssrSupa = createSupabaseServerClient();
+  const ssrSupa = await createSupabaseServerClient();
   const creator = await getCreatorById(ssrSupa, id);
   if (!creator) notFound();
 
@@ -111,16 +113,15 @@ export default async function CreatorDetailPage({ params }: PageProps) {
           </Link>
         </div>
       ) : null}
-
       <header className="flex items-start gap-4">
         <div className="w-20 h-20 shrink-0 bg-muted overflow-hidden">
           {pub.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
+            (<img
               src={pub.avatar_url}
               alt={pub.display_name}
               className="w-full h-full object-cover"
-            />
+            />)
           ) : null}
         </div>
         <div className="min-w-0 flex-1">
@@ -162,13 +163,11 @@ export default async function CreatorDetailPage({ params }: PageProps) {
           ) : null}
         </div>
       </header>
-
       {pub.self_introduction ? (
         <section className="mt-6 text-[13px] whitespace-pre-wrap leading-relaxed">
           {pub.self_introduction}
         </section>
       ) : null}
-
       <section className="mt-8">
         <h2 className="text-[14px] font-semibold">代表作</h2>
         {games.length === 0 ? (
@@ -186,11 +185,11 @@ export default async function CreatorDetailPage({ params }: PageProps) {
                   <div className="w-12 h-12 shrink-0 bg-muted overflow-hidden">
                     {g.thumbnail_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      (<img
                         src={g.thumbnail_url}
                         alt={g.name}
                         className="w-full h-full object-cover"
-                      />
+                      />)
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -214,13 +213,11 @@ export default async function CreatorDetailPage({ params }: PageProps) {
           </ul>
         )}
       </section>
-
       {isPublic ? (
         <div className="mt-6 text-right">
           <ReportButton targetType="creator" targetId={pub.id} />
         </div>
       ) : null}
-
       <p className="mt-10 text-[10px] text-muted-foreground">
         本人確認は、{pub.display_name}
         さんが Roblox プロフィールに一時掲載した確認コードを公開 users API で照合して行いました。

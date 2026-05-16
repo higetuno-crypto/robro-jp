@@ -20,10 +20,8 @@ function parseUniverseId(raw: string): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { universeId: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ universeId: string }> }) {
+  const params = await props.params;
   const universeId = parseUniverseId(params.universeId);
   if (universeId === null) {
     return NextResponse.json({ error: 'invalid universeId' }, { status: 400 });
@@ -106,10 +104,8 @@ export async function PATCH(
   });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { universeId: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ universeId: string }> }) {
+  const params = await props.params;
   const universeId = parseUniverseId(params.universeId);
   if (universeId === null) {
     return NextResponse.json({ error: 'invalid universeId' }, { status: 400 });

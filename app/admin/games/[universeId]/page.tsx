@@ -60,11 +60,12 @@ async function fetchGameTagsForAdmin(universeId: number): Promise<AdminGameTagRo
   }));
 }
 
-export default async function AdminGameDetailPage({
-  params,
-}: {
-  params: { universeId: string };
-}) {
+export default async function AdminGameDetailPage(
+  props: {
+    params: Promise<{ universeId: string }>;
+  }
+) {
+  const params = await props.params;
   const universeId = Number(params.universeId);
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 

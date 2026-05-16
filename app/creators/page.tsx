@@ -16,11 +16,12 @@ export const metadata = {
 
 export const revalidate = 300;
 
-export default async function CreatorsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string };
-}) {
+export default async function CreatorsPage(
+  props: {
+    searchParams: Promise<{ q?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? '').trim().slice(0, 60);
   const supabase = createBrowserClient();
   const allCreators = await listVerifiedCreators(supabase, 100);
@@ -50,7 +51,6 @@ export default async function CreatorsPage({
       <p className="text-[13px] text-muted-foreground mt-1">
         日本語圏で活動する Roblox クリエイター。本人申請＋ Roblox プロフィール照合で確認済み。
       </p>
-
       <div className="mt-4">
         <InlineSearchForm
           action="/creators"
@@ -63,7 +63,6 @@ export default async function CreatorsPage({
           </p>
         )}
       </div>
-
       {creators.length === 0 ? (
         <div className="mt-6 text-[13px] text-muted-foreground">
           {q ? (
@@ -87,11 +86,11 @@ export default async function CreatorsPage({
                 <div className="w-12 h-12 shrink-0 bg-muted overflow-hidden">
                   {c.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    (<img
                       src={c.avatar_url}
                       alt={c.display_name}
                       className="w-full h-full object-cover"
-                    />
+                    />)
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">

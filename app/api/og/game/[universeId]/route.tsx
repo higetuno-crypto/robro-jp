@@ -34,10 +34,8 @@ const BADGE_LABELS: Record<string, string> = {
   slow_burn: 'じわ沼',
 };
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { universeId: string } }
-) {
+export async function GET(_req: Request, props: { params: Promise<{ universeId: string }> }) {
+  const params = await props.params;
   const universeId = Number(params.universeId);
   if (!Number.isFinite(universeId) || universeId <= 0) {
     return new Response('invalid universeId', { status: 400 });

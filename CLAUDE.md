@@ -222,7 +222,7 @@
 
 | レイヤー | 採用 |
 |---|---|
-| フロントエンド | Next.js 14 (App Router) + TypeScript |
+| フロントエンド | Next.js 16 (App Router, Turbopack) + React 19 + TypeScript |
 | スタイル | Tailwind CSS + shadcn/ui |
 | グラフ | Recharts |
 | DB | Supabase (PostgreSQL) |

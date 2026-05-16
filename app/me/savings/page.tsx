@@ -33,7 +33,7 @@ export default async function SavingsPage() {
     redirect('/login?next=/me/savings');
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const [savingsRes, badges] = await Promise.all([
     supabase
       .from('user_savings')
