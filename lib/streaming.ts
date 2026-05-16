@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { hasSupabaseEnv } from './supabase';
 
 /**
  * フェーズ7：配信者導線ヘルパー
@@ -134,6 +135,7 @@ export async function fetchStreamingMeta(
   supabase: SupabaseClient,
   universeId: number
 ): Promise<StreamingMeta | null> {
+  if (!hasSupabaseEnv()) return null;
   const { data, error } = await supabase
     .from('game_streaming_meta')
     .select('*')
@@ -147,6 +149,7 @@ export async function fetchStreamingMeta(
 export async function fetchAllSlots(
   supabase: SupabaseClient
 ): Promise<StreamSlot[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data: slots, error } = await supabase
     .from('stream_slots')
     .select('slot_key, display_name, description, sort_order, is_active')
@@ -183,6 +186,7 @@ export async function fetchSlotBySlug(
   supabase: SupabaseClient,
   slotKey: string
 ): Promise<StreamSlot | null> {
+  if (!hasSupabaseEnv()) return null;
   const { data: slot, error } = await supabase
     .from('stream_slots')
     .select('slot_key, display_name, description, sort_order')
@@ -211,6 +215,7 @@ export async function fetchSlotBySlug(
 export async function fetchSlotGameCounts(
   supabase: SupabaseClient
 ): Promise<Map<string, number>> {
+  if (!hasSupabaseEnv()) return new Map();
   const { data: maps, error } = await supabase
     .from('stream_slot_tags')
     .select('slot_key, tag_id');
@@ -272,6 +277,7 @@ export async function fetchGamesForSlot(
   slotKey: string,
   limit = 30
 ): Promise<SlotGameRow[]> {
+  if (!hasSupabaseEnv()) return [];
   const slot = await fetchSlotBySlug(supabase, slotKey);
   if (!slot || slot.tagIds.length === 0) return [];
 

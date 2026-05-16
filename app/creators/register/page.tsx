@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
+import { createServiceClient } from '@/lib/supabase';
+import { getCurrentUser } from '@/lib/supabase-ssr';
 import { getCreatorByAccountId } from '@/lib/creators';
 import { CreatorRegisterForm } from './CreatorRegisterForm';
 
@@ -30,8 +31,10 @@ export default async function CreatorRegisterPage() {
     redirect('/login?next=/creators/register');
   }
 
-  const supabase = await createSupabaseServerClient();
-  const existing = await getCreatorByAccountId(supabase, user.id);
+  const supabase = createServiceClient();
+  const existing = await getCreatorByAccountId(supabase, user.id, {
+    includeVerification: true,
+  });
 
   return (
     <main className="max-w-xl mx-auto px-3 py-6">

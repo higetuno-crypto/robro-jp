@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
+import { hasSupabaseEnv } from './supabase';
 
 /**
  * フェーズ6：タグ機能のクエリ・ヘルパー
@@ -53,6 +54,7 @@ export async function fetchAllTags(
   supabase: SupabaseClient,
   opts?: { streamingOnly?: boolean }
 ): Promise<TagMaster[]> {
+  if (!hasSupabaseEnv()) return [];
   let q = supabase
     .from('tag_master')
     .select('tag_id, tag_name, tag_type, tag_group, description, is_streaming_related, sort_order')
@@ -70,6 +72,7 @@ export async function fetchGameTags(
   universeId: number,
   opts?: { userTagLimit?: number }
 ): Promise<{ official: GameTag[]; community: GameTag[] }> {
+  if (!hasSupabaseEnv()) return { official: [], community: [] };
   const { data, error } = await supabase
     .from('game_tag_votes')
     .select(
@@ -205,6 +208,7 @@ export interface TagStats extends TagMaster {
 export async function fetchTagsWithStats(
   supabase: SupabaseClient
 ): Promise<TagStats[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data: tags, error: tErr } = await supabase
     .from('tag_master')
     .select('tag_id, tag_name, tag_type, tag_group, description, is_streaming_related, sort_order, created_at')
@@ -248,6 +252,7 @@ export async function fetchTagBySlug(
   supabase: SupabaseClient,
   tagId: string
 ): Promise<TagStats | null> {
+  if (!hasSupabaseEnv()) return null;
   const { data, error } = await supabase
     .from('tag_master')
     .select('tag_id, tag_name, tag_type, tag_group, description, is_streaming_related, sort_order, created_at')
@@ -292,6 +297,7 @@ export async function fetchGamesForTag(
   tagId: string,
   limit = 50
 ): Promise<TagGameRow[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data, error } = await supabase
     .from('game_tag_votes')
     .select(

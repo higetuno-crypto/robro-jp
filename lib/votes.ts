@@ -35,6 +35,13 @@ export interface UserVoteState {
   recommend: boolean;
 }
 
+export class ButtonVoteConflictError extends Error {
+  constructor(public reason: 'already_voted' | 'no_active_vote') {
+    super(reason);
+    this.name = 'ButtonVoteConflictError';
+  }
+}
+
 /**
  * 集計値（vote_count）取得：閲覧公開のため anon クライアントで読める
  */
@@ -161,41 +168,23 @@ export async function castButtonVote(
 ): Promise<{ voteCount: number }> {
   const { universeId, buttonType, accountId, fingerprint, voteValue } = params;
 
-  const { error: logErr } = await supabase.from('game_button_vote_logs').insert({
-    universe_id: universeId,
-    button_type: buttonType,
-    account_id: accountId,
-    fingerprint,
-    vote_value: voteValue,
+  const { data, error } = await supabase.rpc('cast_button_vote_atomic', {
+    p_universe_id: universeId,
+    p_button_type: buttonType,
+    p_account_id: accountId,
+    p_fingerprint: fingerprint,
+    p_vote_value: voteValue,
   });
-  if (logErr) throw logErr;
-
-  // ⭐は user_savings に連動
-  if (buttonType === 'save') {
-    if (voteValue === 1) {
-      const { error: usErr } = await supabase.from('user_savings').upsert(
-        { account_id: accountId, universe_id: universeId },
-        { onConflict: 'account_id,universe_id' }
-      );
-      if (usErr) console.error('[castButtonVote] user_savings upsert', usErr);
-    } else {
-      const { error: usDelErr } = await supabase
-        .from('user_savings')
-        .delete()
-        .eq('account_id', accountId)
-        .eq('universe_id', universeId);
-      if (usDelErr) console.error('[castButtonVote] user_savings delete', usDelErr);
+  if (error) {
+    if (error.message.includes('already_voted')) {
+      throw new ButtonVoteConflictError('already_voted');
     }
+    if (error.message.includes('no_active_vote')) {
+      throw new ButtonVoteConflictError('no_active_vote');
+    }
+    throw error;
   }
 
-  // 集計値を読み返す（トリガが先に走っているはず）
-  const { data, error } = await supabase
-    .from('game_button_votes')
-    .select('vote_count')
-    .eq('universe_id', universeId)
-    .eq('button_type', buttonType)
-    .maybeSingle();
-  if (error) throw error;
-
-  return { voteCount: data?.vote_count ?? 0 };
+  const row = Array.isArray(data) ? data[0] : data;
+  return { voteCount: row?.vote_count ?? 0 };
 }

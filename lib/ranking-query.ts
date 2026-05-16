@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RankingRowData } from '@/types/game';
 import { genreLabelJa } from '@/lib/genre-labels';
+import { hasSupabaseEnv } from '@/lib/supabase';
 
 /**
  * ランキング取得クエリ（Server Component 専用）
@@ -117,6 +118,7 @@ export async function getRanking(
   limit = 100,
   options: RankingOptions = {}
 ): Promise<RankingResult> {
+  if (!hasSupabaseEnv()) return { rows: [], capturedAt: null };
   const latest = await fetchLatestCapturedAt(supabase);
   if (!latest) return { rows: [], capturedAt: null };
 
@@ -218,6 +220,7 @@ export interface CategorySummary {
 export async function getCategorySummaries(
   supabase: SupabaseClient
 ): Promise<CategorySummary[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data, error } = await supabase
     .from('games')
     .select('genre_slug, genre_l1')

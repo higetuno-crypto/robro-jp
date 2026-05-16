@@ -14,10 +14,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const FALLBACK_SUPABASE_URL = 'https://example.supabase.co';
+const FALLBACK_SUPABASE_ANON_KEY = 'env-not-configured';
 
 export async function createSupabaseServerClient(): Promise<SupabaseClient> {
   const store = await cookies();
-  return createServerClient(url, anon, {
+  return createServerClient(url || FALLBACK_SUPABASE_URL, anon || FALLBACK_SUPABASE_ANON_KEY, {
     cookies: {
       get(name: string) {
         return store.get(name)?.value;
@@ -41,6 +43,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient> {
 }
 
 export async function getCurrentUser() {
+  if (!url || !anon) return null;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },

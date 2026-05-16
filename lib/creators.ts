@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { hasSupabaseEnv } from './supabase';
 
 /**
  * フェーズ10：creators / creator_games のDBヘルパ
@@ -56,6 +57,23 @@ export const CREATOR_SOCIAL_LINK_MAX = 5;
 export const CREATOR_VERIFICATION_TTL_HOURS = 24;
 export const CREATOR_CODE_REGEN_LIMIT_PER_DAY = 5;
 
+const CREATOR_PUBLIC_COLUMNS = [
+  'id',
+  'account_id',
+  'display_name',
+  'self_introduction',
+  'avatar_url',
+  'social_links',
+  'roblox_profile_url',
+  'roblox_user_id',
+  'verified_at',
+  'is_verified',
+  'created_at',
+  'updated_at',
+].join(', ');
+
+const CREATOR_PRIVATE_COLUMNS = `${CREATOR_PUBLIC_COLUMNS}, verification_code, verification_expires_at`;
+
 const SOCIAL_PLATFORMS: SocialLink['platform'][] = [
   'x',
   'youtube',
@@ -96,34 +114,55 @@ export function validateSocialLinks(value: unknown): SocialLink[] | { error: str
 
 export async function getCreatorByAccountId(
   supabase: SupabaseClient,
-  accountId: string
+  accountId: string,
+  opts: { includeVerification?: boolean } = {}
 ): Promise<Creator | null> {
   const { data, error } = await supabase
     .from('creators')
-    .select('*')
+    .select(opts.includeVerification ? CREATOR_PRIVATE_COLUMNS : CREATOR_PUBLIC_COLUMNS)
     .eq('account_id', accountId)
     .maybeSingle();
   if (error) {
     console.error('[getCreatorByAccountId]', error);
     return null;
   }
-  return (data as Creator | null) ?? null;
+  return data ? normalizeCreator(data as Partial<Creator>) : null;
 }
 
 export async function getCreatorById(
   supabase: SupabaseClient,
-  id: number
+  id: number,
+  opts: { includeVerification?: boolean } = {}
 ): Promise<Creator | null> {
   const { data, error } = await supabase
     .from('creators')
-    .select('*')
+    .select(opts.includeVerification ? CREATOR_PRIVATE_COLUMNS : CREATOR_PUBLIC_COLUMNS)
     .eq('id', id)
     .maybeSingle();
   if (error) {
     console.error('[getCreatorById]', error);
     return null;
   }
-  return (data as Creator | null) ?? null;
+  return data ? normalizeCreator(data as Partial<Creator>) : null;
+}
+
+function normalizeCreator(row: Partial<Creator>): Creator {
+  return {
+    id: row.id!,
+    account_id: row.account_id!,
+    display_name: row.display_name!,
+    self_introduction: row.self_introduction ?? '',
+    avatar_url: row.avatar_url ?? null,
+    social_links: row.social_links ?? [],
+    roblox_profile_url: row.roblox_profile_url!,
+    roblox_user_id: row.roblox_user_id ?? null,
+    verification_code: row.verification_code ?? null,
+    verification_expires_at: row.verification_expires_at ?? null,
+    verified_at: row.verified_at ?? null,
+    is_verified: row.is_verified ?? false,
+    created_at: row.created_at!,
+    updated_at: row.updated_at!,
+  };
 }
 
 export function toPublic(c: Creator): CreatorPublic {
@@ -143,6 +182,7 @@ export async function listVerifiedCreators(
   supabase: SupabaseClient,
   limit = 100
 ): Promise<CreatorPublic[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data, error } = await supabase
     .from('creators')
     .select(
@@ -172,6 +212,7 @@ export async function listCreatorGames(
   supabase: SupabaseClient,
   creatorId: number
 ): Promise<CreatorGameDetail[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data, error } = await supabase
     .from('creator_games')
     .select(

@@ -122,7 +122,9 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceClient();
 
   // 既存creators行（同一account）に対しては UPDATE、なければ INSERT
-  const existing = await getCreatorByAccountId(supabase, user.id);
+  const existing = await getCreatorByAccountId(supabase, user.id, {
+    includeVerification: true,
+  });
 
   // 同一 Roblox user_id が既に他アカウントで verified なら拒否（uq_creators_verified_roblox_user で DB 制約あるが先に分かりやすいエラーで）
   if (!existing || existing.roblox_user_id !== robloxUserId) {
@@ -140,8 +142,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const verification_code = generateVerificationCode();
-  const verification_expires_at = expirationFromNow();
+  const sameRobloxUser = existing?.roblox_user_id === robloxUserId;
+  const keepVerified = Boolean(existing?.is_verified && sameRobloxUser);
+  const verification_code = keepVerified ? null : generateVerificationCode();
+  const verification_expires_at = keepVerified ? null : expirationFromNow();
 
   const payload = {
     account_id: user.id,
@@ -153,8 +157,8 @@ export async function POST(req: NextRequest) {
     roblox_user_id: robloxUserId,
     verification_code,
     verification_expires_at,
-    // is_verified は既存値を維持。再認証時は別エンドポイント
-    ...(existing ? {} : { is_verified: false }),
+    is_verified: keepVerified,
+    verified_at: keepVerified ? existing?.verified_at ?? new Date().toISOString() : null,
     updated_at: new Date().toISOString(),
   };
 
@@ -167,12 +171,23 @@ export async function POST(req: NextRequest) {
       console.error('[creators POST update]', error);
       return NextResponse.json({ error: 'internal error' }, { status: 500 });
     }
+    if (!sameRobloxUser) {
+      const { error: cgErr } = await supabase
+        .from('creator_games')
+        .delete()
+        .eq('creator_id', existing.id);
+      if (cgErr) {
+        console.error('[creators POST reset creator_games]', cgErr);
+        return NextResponse.json({ error: 'internal error' }, { status: 500 });
+      }
+    }
     return NextResponse.json({
       creator_id: existing.id,
       verification_code,
       verification_expires_at,
       roblox_user_name: rb.name,
-      next_step: 'put_code_in_roblox_description',
+      already_verified: keepVerified,
+      next_step: keepVerified ? 'profile_updated' : 'put_code_in_roblox_description',
     });
   }
 

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createBrowserClient } from '@/lib/supabase';
+import { createBrowserClient, createServiceClient } from '@/lib/supabase';
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import {
   fetchGameButtonVotes,
   fetchUserVoteState,
   countRecentVotesByAccount,
-  hasActiveVote,
   castButtonVote,
+  ButtonVoteConflictError,
   makeFingerprint,
   VOTE_LIMIT_PER_MINUTE,
   VOTE_LIMIT_PER_DAY,
@@ -103,16 +103,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ universe
     return NextResponse.json({ error: 'invalid action' }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
-
-  // 既存状態と矛盾しない操作か確認
-  const active = await hasActiveVote(supabase, universeId, buttonType as ButtonType, accountId);
-  if (action === 'add' && active) {
-    return NextResponse.json({ error: 'already voted within 24h' }, { status: 409 });
-  }
-  if (action === 'remove' && !active) {
-    return NextResponse.json({ error: 'no active vote to remove' }, { status: 409 });
-  }
+  const supabase = createServiceClient();
 
   // レートリミット
   const { last60s, last24h } = await countRecentVotesByAccount(supabase, accountId);
@@ -151,6 +142,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ universe
       user_voted: action === 'add',
     });
   } catch (e) {
+    if (e instanceof ButtonVoteConflictError) {
+      return NextResponse.json({ error: e.reason }, { status: 409 });
+    }
     console.error('[api/votes POST]', e);
     return NextResponse.json({ error: 'internal error' }, { status: 500 });
   }

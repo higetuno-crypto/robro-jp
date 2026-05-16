@@ -114,11 +114,17 @@ export default async function GameDetailPage(
     : null;
 
   const totalVotes = voteCounts.like + voteCounts.save + voteCounts.recommend;
+  const descriptionPreview = game.description
+    ? game.description.slice(0, 200)
+    : null;
+  const isDescriptionTruncated = Boolean(
+    game.description && game.description.length > (descriptionPreview?.length ?? 0)
+  );
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'VideoGame',
     name: game.name,
-    description: game.description?.slice(0, 500) ?? undefined,
+    description: descriptionPreview ?? undefined,
     url: `https://ro-brojp.com/game/${universeId}`,
     image: game.thumbnailUrl ?? undefined,
     inLanguage: game.isJapanese ? 'ja' : undefined,
@@ -244,12 +250,26 @@ export default async function GameDetailPage(
         )}
       </div>
       {/* 概要 */}
-      {game.description ? (
+      {descriptionPreview ? (
         <div className="mt-5">
           <div className="text-[13px] text-muted-foreground mb-1">概要</div>
           <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-            {game.description}
+            {descriptionPreview}
+            {isDescriptionTruncated ? '…' : ''}
           </p>
+          {robloxUrl ? (
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              詳細な説明は{' '}
+              <a
+                href={robloxUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                Robloxで見る
+              </a>
+            </p>
+          ) : null}
         </div>
       ) : null}
       {/* 現在CCU */}

@@ -32,7 +32,10 @@ export interface SearchHit {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const q = (url.searchParams.get('q') ?? '').trim();
-  const limit = Math.min(Number(url.searchParams.get('limit') ?? 20), 50);
+  const rawLimit = Number(url.searchParams.get('limit') ?? 20);
+  const limit = Number.isFinite(rawLimit)
+    ? Math.max(1, Math.min(Math.trunc(rawLimit), 50))
+    : 20;
 
   if (!q || q.length < 1) {
     return NextResponse.json({ q, hits: [] satisfies SearchHit[] });

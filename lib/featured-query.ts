@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { hasSupabaseEnv } from '@/lib/supabase';
 
 /**
  * ピックアップ（/featured）用のクエリ
@@ -37,6 +38,7 @@ export async function fetchFeatured(
   supabase: SupabaseClient,
   limit = 20
 ): Promise<FeaturedItem[]> {
+  if (!hasSupabaseEnv()) return [];
   const { data, error } = await supabase
     .from('featured_games')
     .select(

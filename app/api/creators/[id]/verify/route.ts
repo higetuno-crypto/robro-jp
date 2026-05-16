@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, props: { params: Promise<{ id: str
   }
 
   const supabase = createServiceClient();
-  const creator = await getCreatorById(supabase, id);
+  const creator = await getCreatorById(supabase, id, { includeVerification: true });
   if (!creator) {
     return NextResponse.json({ error: 'not found' }, { status: 404 });
   }

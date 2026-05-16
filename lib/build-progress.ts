@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { hasSupabaseEnv } from './supabase';
 
 /**
  * 「みんなで作る日本ランキング」進捗ゲージのバックエンド集計
@@ -36,6 +37,7 @@ export interface BuildProgress {
  * トリガで即時更新される。マテビューより新鮮で軽量。
  */
 export async function fetchTotalVotes(supabase: SupabaseClient): Promise<number> {
+  if (!hasSupabaseEnv()) return 0;
   const { data, error } = await supabase
     .from('game_button_votes')
     .select('vote_count');

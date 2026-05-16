@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { getCurrentUser } from '@/lib/supabase-ssr';
 import { SearchBox } from './SearchBox';
 
@@ -86,7 +87,9 @@ export async function SiteHeader() {
         </nav>
       </div>
       <div className="max-w-3xl mx-auto px-3 pb-2">
-        <SearchBox />
+        <Suspense fallback={null}>
+          <SearchBox />
+        </Suspense>
       </div>
     </header>
   );

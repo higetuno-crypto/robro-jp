@@ -44,7 +44,7 @@ function timingSafeEqual(a: string, b: string): boolean {
     for (let i = 0; i < len; i++) {
       diff |= (a.charCodeAt(i % a.length) ^ b.charCodeAt(i % b.length)) || 0;
     }
-    return false;
+    return diff === 0 && false;
   }
   let diff = 0;
   for (let i = 0; i < a.length; i++) {

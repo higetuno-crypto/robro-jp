@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createSupabaseClientClient } from '@/lib/supabase-browser';
 
 /**
@@ -46,6 +46,7 @@ export function VoteButtons({
   };
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [state, setState] = useState<Record<ButtonType, ButtonState>>({
     like: initial?.like ?? { count: 0, voted: false },
     save: initial?.save ?? { count: 0, voted: false },
@@ -105,7 +106,7 @@ export function VoteButtons({
     if (busy) return;
     if (isLoggedIn === false) {
       const next = encodeURIComponent(pathname ?? '/');
-      window.location.href = `/login?next=${next}`;
+      router.push(`/login?next=${next}`);
       return;
     }
     if (isLoggedIn === null) return; // 認証状態取得待ち

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * トップ上部の「ようこそストリップ」。
@@ -44,13 +44,9 @@ const ENTRIES: Entry[] = [
 ];
 
 export function WelcomeStrip() {
-  const [hidden, setHidden] = useState(true);
-
-  useEffect(() => {
-    const dismissed = typeof window !== 'undefined'
-      && window.localStorage.getItem(DISMISS_KEY) === '1';
-    setHidden(dismissed);
-  }, []);
+  const [hidden, setHidden] = useState(() =>
+    typeof window === 'undefined' || window.localStorage.getItem(DISMISS_KEY) === '1'
+  );
 
   if (hidden) return null;
 

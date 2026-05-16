@@ -35,15 +35,16 @@ export function BuildHeroSearch() {
 
   useEffect(() => {
     const trimmed = q.trim();
-    if (!trimmed) {
-      setHits([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
     const myReqId = ++reqIdRef.current;
     const timer = setTimeout(async () => {
+      if (!trimmed) {
+        if (myReqId === reqIdRef.current) {
+          setHits([]);
+          setLoading(false);
+        }
+        return;
+      }
+      setLoading(true);
       try {
         const res = await fetch(
           `/api/search/games?q=${encodeURIComponent(trimmed)}&limit=${MAX_RESULTS}`,
@@ -62,7 +63,7 @@ export function BuildHeroSearch() {
       } finally {
         if (myReqId === reqIdRef.current) setLoading(false);
       }
-    }, DEBOUNCE_MS);
+    }, trimmed ? DEBOUNCE_MS : 0);
 
     return () => clearTimeout(timer);
   }, [q]);

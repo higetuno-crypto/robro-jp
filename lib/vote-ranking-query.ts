@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ButtonType } from './ranking-vote';
+import { hasSupabaseEnv } from './supabase';
 
 /**
  * フェーズ8：ボタン別ランキング（❤️/⭐/🔥）クエリ
@@ -57,6 +58,7 @@ export async function getVoteRanking(
   buttonType: ButtonType,
   options?: { limit?: number; jpOnly?: boolean }
 ): Promise<VoteRankingResult> {
+  if (!hasSupabaseEnv()) return { rows: [], refreshedAt: null };
   const limit = options?.limit ?? 100;
   const scoreCol =
     buttonType === 'like'

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 /**
  * 右下固定のご意見FAB（Floating Action Button）。
@@ -20,17 +20,16 @@ const DISMISS_DURATION_MS = 30 * 24 * 3600 * 1000; // 30日
 
 export function FeedbackFab() {
   const pathname = usePathname() ?? '';
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
     const raw = window.localStorage.getItem(DISMISS_KEY);
     const dismissedAt = raw ? Number(raw) : 0;
     const isDismissed =
       Number.isFinite(dismissedAt) &&
       dismissedAt > 0 &&
       Date.now() - dismissedAt < DISMISS_DURATION_MS;
-    setVisible(!isDismissed);
-  }, []);
+    return !isDismissed;
+  });
 
   // 自己参照・管理画面では非表示
   const isExcludedPath =

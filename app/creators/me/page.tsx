@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { createServiceClient } from '@/lib/supabase';
 import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import {
   getCreatorByAccountId,
@@ -31,8 +32,10 @@ export default async function CreatorMyPage() {
     redirect('/login?next=/creators/me');
   }
 
-  const supabase = await createSupabaseServerClient();
-  const creator = await getCreatorByAccountId(supabase, user.id);
+  const adminSupabase = createServiceClient();
+  const creator = await getCreatorByAccountId(adminSupabase, user.id, {
+    includeVerification: true,
+  });
 
   if (!creator) {
     return (
@@ -51,6 +54,7 @@ export default async function CreatorMyPage() {
     );
   }
 
+  const supabase = await createSupabaseServerClient();
   const games = creator.is_verified ? await listCreatorGames(supabase, creator.id) : [];
   const codeExpired = creator.verification_code
     ? isVerificationCodeExpired(creator)

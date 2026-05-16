@@ -83,10 +83,16 @@ export function CreatorRegisterForm({ initial }: Props) {
       setCreatorId(data.creator_id);
       setCode(data.verification_code);
       setCodeExpires(data.verification_expires_at);
-      setIsVerified(false);
-      setMessage(
-        `Roblox ユーザー名「${data.roblox_user_name}」を確認しました。下記のコードを Robloxプロフィール bio に貼り付け、24時間以内に確認ボタンを押してください。`
-      );
+      if (data.already_verified) {
+        setIsVerified(true);
+        setMessage('プロフィールを更新しました。本人確認済み状態は維持されています。');
+        router.refresh();
+      } else {
+        setIsVerified(false);
+        setMessage(
+          `Roblox ユーザー名「${data.roblox_user_name}」を確認しました。下記のコードを Robloxプロフィール bio に貼り付け、24時間以内に確認ボタンを押してください。`
+        );
+      }
     } catch (err) {
       console.error(err);
       setError('通信エラーが発生しました');
@@ -244,7 +250,13 @@ export function CreatorRegisterForm({ initial }: Props) {
           disabled={submitting}
           className="px-4 py-2 text-[14px] border border-foreground hover:bg-muted disabled:opacity-40"
         >
-          {submitting ? '送信中…' : creatorId ? '内容を更新して新しい確認コードを発行' : '登録して確認コードを発行'}
+          {submitting
+            ? '送信中…'
+            : creatorId && isVerified
+            ? 'プロフィールを更新'
+            : creatorId
+            ? '内容を更新して新しい確認コードを発行'
+            : '登録して確認コードを発行'}
         </button>
       </form>
 

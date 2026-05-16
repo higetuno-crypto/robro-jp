@@ -162,48 +162,15 @@ export async function toggleVote(
 ): Promise<{ voted: boolean; voteCount: number }> {
   const { postId, accountId, fingerprint } = params;
 
-  // 既存投票を確認
-  const { data: existing, error: selErr } = await supabase
-    .from('feedback_votes')
-    .select('post_id')
-    .eq('post_id', postId)
-    .eq('account_id', accountId)
-    .maybeSingle();
-  if (selErr) throw selErr;
+  const { data, error } = await supabase.rpc('toggle_feedback_vote_atomic', {
+    p_post_id: postId,
+    p_account_id: accountId,
+    p_fingerprint: fingerprint,
+  });
+  if (error) throw error;
 
-  if (existing) {
-    // 取り消し
-    const { error: delErr } = await supabase
-      .from('feedback_votes')
-      .delete()
-      .eq('post_id', postId)
-      .eq('account_id', accountId);
-    if (delErr) throw delErr;
-  } else {
-    // 追加
-    const { error: insErr } = await supabase.from('feedback_votes').insert({
-      post_id: postId,
-      account_id: accountId,
-      fingerprint,
-    });
-    if (insErr) throw insErr;
-  }
-
-  // vote_count を集計から再計算（整合性優先。将来RPC化候補）
-  const { count, error: cErr } = await supabase
-    .from('feedback_votes')
-    .select('post_id', { count: 'exact', head: true })
-    .eq('post_id', postId);
-  if (cErr) throw cErr;
-
-  const newCount = count ?? 0;
-  const { error: upErr } = await supabase
-    .from('feedback_posts')
-    .update({ vote_count: newCount, updated_at: new Date().toISOString() })
-    .eq('id', postId);
-  if (upErr) throw upErr;
-
-  return { voted: !existing, voteCount: newCount };
+  const row = Array.isArray(data) ? data[0] : data;
+  return { voted: row?.voted ?? false, voteCount: row?.vote_count ?? 0 };
 }
 
 /** 投稿作成 */

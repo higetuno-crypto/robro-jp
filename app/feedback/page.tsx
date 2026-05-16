@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createBrowserClient } from '@/lib/supabase';
-import { getCurrentUser } from '@/lib/supabase-ssr';
+import { createSupabaseServerClient, getCurrentUser } from '@/lib/supabase-ssr';
 import {
   fetchFeedbackPosts,
   fetchUserVotedPostIds,
@@ -69,7 +69,7 @@ export default async function FeedbackPage(props: PageProps) {
   ]);
 
   const votedSet = user
-    ? await fetchUserVotedPostIds(supabase, user.id)
+    ? await fetchUserVotedPostIds(await createSupabaseServerClient(), user.id)
     : new Set<number>();
 
   return (

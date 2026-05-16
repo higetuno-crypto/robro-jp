@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * ヘッダー固定の検索ボックス。
@@ -12,13 +12,7 @@ import { useState, useEffect } from 'react';
 export function SearchBox() {
   const router = useRouter();
   const params = useSearchParams();
-  const [q, setQ] = useState('');
-
-  // /search にいる時は URL の q を反映
-  useEffect(() => {
-    const initial = params?.get('q') ?? '';
-    setQ(initial);
-  }, [params]);
+  const [q, setQ] = useState(() => params?.get('q') ?? '');
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();

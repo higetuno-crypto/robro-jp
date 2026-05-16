@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@/lib/supabase';
+import { createBrowserClient, hasSupabaseEnv } from '@/lib/supabase';
 
 /**
  * /legal/bans BAN 公開ログ（H5：透明性）
@@ -37,12 +37,15 @@ interface BanRow {
 }
 
 export default async function BansPage() {
-  const supabase = createBrowserClient();
-  const { data } = await supabase
-    .from('moderation_ban_logs')
-    .select('id, target_type, reason_code, reason_detail, banned_at, appeal_status')
-    .order('banned_at', { ascending: false })
-    .limit(100);
+  const data = hasSupabaseEnv()
+    ? (
+        await createBrowserClient()
+          .from('moderation_ban_logs')
+          .select('id, target_type, reason_code, reason_detail, banned_at, appeal_status')
+          .order('banned_at', { ascending: false })
+          .limit(100)
+      ).data
+    : null;
 
   const rows = (data as BanRow[] | null) ?? [];
 
