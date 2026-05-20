@@ -302,7 +302,7 @@ export async function fetchGamesForTag(
     .from('game_tag_votes')
     .select(
       `universe_id, vote_count, confidence_score,
-       games!inner(universe_id, name, creator_name, thumbnail_url, is_japanese)`
+       games!inner(universe_id, name, name_ja, creator_name, thumbnail_url, is_japanese)`
     )
     .eq('tag_id', tagId)
     .gt('vote_count', 0)
@@ -318,6 +318,7 @@ export async function fetchGamesForTag(
     games: {
       universe_id: number;
       name: string;
+      name_ja: string | null;
       creator_name: string | null;
       thumbnail_url: string | null;
       is_japanese: boolean;
@@ -349,7 +350,7 @@ export async function fetchGamesForTag(
 
   return rows.map((r) => ({
     universeId: r.universe_id,
-    name: r.games.name,
+    name: r.games.name_ja ?? r.games.name,
     creatorName: r.games.creator_name,
     thumbnailUrl: r.games.thumbnail_url,
     isJapanese: r.games.is_japanese,

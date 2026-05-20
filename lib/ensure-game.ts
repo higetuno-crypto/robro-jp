@@ -27,6 +27,7 @@ export async function ensureGameInDb(
         universe_id: g.id,
         place_id: g.rootPlaceId,
         name: g.name,
+        name_ja: g.name_ja,
         description: g.description,
         creator_name: g.creator?.name ?? null,
         creator_type: g.creator?.type ?? null,
@@ -47,7 +48,7 @@ export async function ensureGameInDb(
     return {
       universeId: g.id,
       placeId: g.rootPlaceId,
-      name: g.name,
+      name: g.name_ja ?? g.name,
       description: g.description,
       creatorName: g.creator?.name ?? null,
       creatorType: g.creator?.type ?? null,

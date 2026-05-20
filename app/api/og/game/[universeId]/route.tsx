@@ -46,13 +46,18 @@ export async function GET(_req: Request, props: { params: Promise<{ universeId: 
   // ゲーム基本情報
   const { data: game } = await supabase
     .from('games')
-    .select('universe_id, name, thumbnail_url, creator_name')
+    .select('universe_id, name, name_ja, thumbnail_url, creator_name')
     .eq('universe_id', universeId)
     .maybeSingle();
 
   if (!game) {
     return new Response('game not found', { status: 404 });
   }
+
+  // Roblox公式の日本ロケール名を優先（無ければ英語名）
+  const displayName =
+    (game as { name_ja: string | null }).name_ja ??
+    (game as { name: string }).name;
 
   const meta = await fetchStreamingMeta(supabase, universeId).catch(() => null);
 
@@ -68,9 +73,7 @@ export async function GET(_req: Request, props: { params: Promise<{ universeId: 
   );
   const badges = pickBadges(candidateTagIds, 3);
 
-  const pitch =
-    meta?.shortPitchJa ??
-    (game as { name: string }).name;
+  const pitch = meta?.shortPitchJa ?? displayName;
   const englishBarrier = meta?.englishBarrier ?? null;
 
   // 基本スタイルは system font のみ（edge runtime でフォント埋め込み省略）
@@ -129,7 +132,7 @@ export async function GET(_req: Request, props: { params: Promise<{ universeId: 
               overflow: 'hidden',
             }}
           >
-            {(game as { name: string }).name}
+            {displayName}
           </div>
           <div
             style={{

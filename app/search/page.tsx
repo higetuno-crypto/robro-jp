@@ -57,9 +57,9 @@ export default async function SearchPage(
     supabase
       .from('games')
       .select(
-        'universe_id, name, creator_name, thumbnail_url, game_snapshots(playing, captured_at)'
+        'universe_id, name, name_ja, creator_name, thumbnail_url, game_snapshots(playing, captured_at)'
       )
-      .or(`name.ilike.${pattern},creator_name.ilike.${pattern}`)
+      .or(`name.ilike.${pattern},name_ja.ilike.${pattern},creator_name.ilike.${pattern}`)
       .limit(30),
     searchRobloxGames(q, 30),
   ]);
@@ -80,7 +80,7 @@ export default async function SearchPage(
         : null;
     return {
       universeId: r.universe_id,
-      name: r.name,
+      name: r.name_ja ?? r.name,
       creatorName: r.creator_name,
       thumbnailUrl: r.thumbnail_url,
       playing: latest,
