@@ -33,7 +33,7 @@ export async function fetchGameDetail(
   const { data, error } = await supabase
     .from('games')
     .select(
-      'universe_id, place_id, name, description, creator_name, creator_type, thumbnail_url, is_japanese, updated_at'
+      'universe_id, place_id, name, name_ja, description, creator_name, creator_type, thumbnail_url, is_japanese, updated_at'
     )
     .eq('universe_id', universeId)
     .maybeSingle();
@@ -42,7 +42,7 @@ export async function fetchGameDetail(
   return {
     universeId: data.universe_id,
     placeId: data.place_id,
-    name: data.name,
+    name: data.name_ja ?? data.name,
     description: data.description,
     creatorName: data.creator_name,
     creatorType: data.creator_type,

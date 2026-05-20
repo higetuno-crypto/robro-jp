@@ -126,6 +126,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
   let gameMeta: {
     universeId: number;
     name: string;
+    nameJa: string | null;
     description: string | null;
     rootPlaceId: number | null;
     thumbnailUrl: string | null;
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     gameMeta = {
       universeId: g.id,
       name: g.name,
+      nameJa: g.name_ja,
       description: g.description,
       rootPlaceId: g.rootPlaceId,
       thumbnailUrl: g.thumbnailUrl,
@@ -165,6 +167,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     gameMeta = {
       universeId: dev.id,
       name: dev.name,
+      nameJa: null, // develop API はロケール名を返さない
       description: dev.description,
       rootPlaceId: dev.rootPlaceId,
       thumbnailUrl: null, // develop API はサムネを返さない
@@ -193,6 +196,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       universe_id: gameMeta.universeId,
       place_id: gameMeta.rootPlaceId,
       name: gameMeta.name,
+      name_ja: gameMeta.nameJa,
       description: gameMeta.description,
       creator_name: creatorInfo?.name ?? null,
       creator_type: creatorInfo?.type ?? null,

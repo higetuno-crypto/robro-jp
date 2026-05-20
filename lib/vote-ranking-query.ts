@@ -43,6 +43,7 @@ interface ScoreRow {
 interface GameMini {
   universe_id: number;
   name: string;
+  name_ja: string | null;
   creator_name: string | null;
   thumbnail_url: string | null;
 }
@@ -96,7 +97,7 @@ export async function getVoteRanking(
   const universeIds = scoreRows.map((r) => r.universe_id);
   const { data: games, error: gErr } = await supabase
     .from('games')
-    .select('universe_id, name, creator_name, thumbnail_url')
+    .select('universe_id, name, name_ja, creator_name, thumbnail_url')
     .in('universe_id', universeIds);
   if (gErr) throw gErr;
 
@@ -116,7 +117,7 @@ export async function getVoteRanking(
     rows.push({
       universeId: s.universe_id,
       rank: rows.length + 1,
-      name: g.name,
+      name: g.name_ja ?? g.name,
       creatorName: g.creator_name,
       thumbnailUrl: g.thumbnail_url,
       isJapanese: s.is_japanese,

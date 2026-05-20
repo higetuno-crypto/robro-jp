@@ -321,7 +321,7 @@ export async function fetchGamesForSlot(
   const [gamesRes, metaRes, allBadgesRes] = await Promise.all([
     supabase
       .from('games')
-      .select('universe_id, name, creator_name, thumbnail_url')
+      .select('universe_id, name, name_ja, creator_name, thumbnail_url')
       .in('universe_id', universeIds),
     supabase
       .from('game_streaming_meta')
@@ -343,6 +343,7 @@ export async function fetchGamesForSlot(
     ((gamesRes.data ?? []) as Array<{
       universe_id: number;
       name: string;
+      name_ja: string | null;
       creator_name: string | null;
       thumbnail_url: string | null;
     }>).map((g) => [g.universe_id, g])
@@ -374,7 +375,7 @@ export async function fetchGamesForSlot(
     const badges = pickBadges(candidateBadges, 3);
     result.push({
       universeId,
-      name: g.name,
+      name: g.name_ja ?? g.name,
       creatorName: g.creator_name,
       thumbnailUrl: g.thumbnail_url,
       shortPitchJa: m?.short_pitch_ja ?? null,

@@ -216,7 +216,7 @@ export async function listCreatorGames(
   const { data, error } = await supabase
     .from('creator_games')
     .select(
-      'universe_id, is_primary, registered_at, games:games!inner(universe_id, name, thumbnail_url, creator_name)'
+      'universe_id, is_primary, registered_at, games:games!inner(universe_id, name, name_ja, thumbnail_url, creator_name)'
     )
     .eq('creator_id', creatorId)
     .order('is_primary', { ascending: false })
@@ -230,6 +230,7 @@ export async function listCreatorGames(
   type GameRow = {
     universe_id: number;
     name: string;
+    name_ja: string | null;
     thumbnail_url: string | null;
     creator_name: string | null;
   };
@@ -248,7 +249,7 @@ export async function listCreatorGames(
         universe_id: r.universe_id,
         is_primary: r.is_primary,
         registered_at: r.registered_at,
-        name: g.name,
+        name: g.name_ja ?? g.name,
         thumbnail_url: g.thumbnail_url,
         creator_name: g.creator_name,
         playing: null as number | null,

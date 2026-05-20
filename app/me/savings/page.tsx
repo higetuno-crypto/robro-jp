@@ -22,6 +22,7 @@ interface SavingRow {
   games: {
     universe_id: number;
     name: string;
+    name_ja: string | null;
     creator_name: string | null;
     thumbnail_url: string | null;
   } | null;
@@ -38,7 +39,7 @@ export default async function SavingsPage() {
     supabase
       .from('user_savings')
       .select(
-        'added_at, universe_id, games!inner(universe_id, name, creator_name, thumbnail_url)'
+        'added_at, universe_id, games!inner(universe_id, name, name_ja, creator_name, thumbnail_url)'
       )
       .eq('account_id', user.id)
       .order('added_at', { ascending: false }),
@@ -110,7 +111,7 @@ export default async function SavingsPage() {
                 ) : null}
               </div>
               <div className="min-w-0">
-                <div className="text-[14px] leading-tight truncate">{g.name}</div>
+                <div className="text-[14px] leading-tight truncate">{g.name_ja ?? g.name}</div>
                 <div className="text-[14px] leading-tight text-muted-foreground truncate">
                   {g.creator_name ?? '-'}
                 </div>

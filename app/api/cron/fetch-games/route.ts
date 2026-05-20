@@ -59,6 +59,7 @@ export async function GET(request: Request) {
         universe_id: g.id,
         place_id: g.rootPlaceId,
         name: g.name,
+        name_ja: g.name_ja,
         description: g.description,
         creator_name: g.creator?.name ?? null,
         creator_type: g.creator?.type ?? null,

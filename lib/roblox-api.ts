@@ -45,6 +45,8 @@ interface ThumbnailResponse {
 /** Rolimonsから貰ったUniverseIdで公式APIを叩き、詳細とサムネを取得 */
 export interface GameWithThumbnail extends RobloxGameDetail {
   thumbnailUrl: string | null;
+  /** Roblox の ja-jp ロケール名（Roblox公式が日本で表示する名前）。取れなければ null */
+  name_ja: string | null;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -98,7 +100,44 @@ async function fetchThumbnailsBatch(
 }
 
 /**
- * UniverseIdのリストから、ゲーム詳細＋サムネをまとめて取得する
+ * ja-jp ロケールで games API を叩き、日本語名だけを取り出す。
+ * Roblox は公式に Accept-Language ヘッダで実験名/説明をロケール化する。
+ * 日本語名は表示用の付加情報なので、失敗しても致命とせず空 Map を返す
+ * （呼び出し側は英語 name にフォールバックする）。
+ */
+async function fetchJapaneseNames(
+  universeIds: number[]
+): Promise<Map<number, string>> {
+  try {
+    const url = `${GAMES_DETAIL_URL}?universeIds=${universeIds.join(',')}`;
+    const res = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
+        Accept: 'application/json',
+        'Accept-Language': 'ja-jp,ja;q=0.9',
+      },
+    });
+    if (!res.ok) {
+      console.error(`Roblox games API (ja-jp) error: ${res.status}`);
+      return new Map();
+    }
+    const json = (await res.json()) as GamesDetailResponse;
+    const map = new Map<number, string>();
+    for (const d of json.data ?? []) {
+      if (typeof d.name === 'string' && d.name.length > 0) {
+        map.set(d.id, d.name);
+      }
+    }
+    return map;
+  } catch (err) {
+    console.error('Roblox games API (ja-jp) fetch error:', err);
+    return new Map();
+  }
+}
+
+/**
+ * UniverseIdのリストから、ゲーム詳細＋サムネ＋日本語名をまとめて取得する
  * 100件ずつバッチ、バッチ間500msディレイ
  */
 export async function fetchGameDetails(
@@ -109,14 +148,19 @@ export async function fetchGameDetails(
 
   for (let i = 0; i < batches.length; i++) {
     const ids = batches[i];
-    // 詳細とサムネを並列で取得（同じバッチ内なので公式APIへの同時負荷は2req）
-    const [details, thumbs] = await Promise.all([
+    // 詳細・サムネ・日本語名を並列で取得（同じバッチ内なので公式APIへの同時負荷は3req）
+    const [details, thumbs, jaNames] = await Promise.all([
       fetchGamesBatch(ids),
       fetchThumbnailsBatch(ids),
+      fetchJapaneseNames(ids),
     ]);
 
     for (const d of details) {
-      results.push({ ...d, thumbnailUrl: thumbs.get(d.id) ?? null });
+      results.push({
+        ...d,
+        thumbnailUrl: thumbs.get(d.id) ?? null,
+        name_ja: jaNames.get(d.id) ?? null,
+      });
     }
 
     // 最終バッチ以外はディレイ

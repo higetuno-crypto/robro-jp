@@ -29,6 +29,7 @@ interface Row {
   games: {
     universe_id: number;
     name: string;
+    name_ja: string | null;
     creator_name: string | null;
     thumbnail_url: string | null;
   } | null;
@@ -42,7 +43,7 @@ export async function fetchFeatured(
   const { data, error } = await supabase
     .from('featured_games')
     .select(
-      'id, universe_id, headline, comment, display_order, featured_at, games(universe_id, name, creator_name, thumbnail_url)'
+      'id, universe_id, headline, comment, display_order, featured_at, games(universe_id, name, name_ja, creator_name, thumbnail_url)'
     )
     .eq('is_active', true)
     .order('display_order', { ascending: true })
@@ -56,7 +57,7 @@ export async function fetchFeatured(
     items.push({
       id: r.id,
       universeId: r.universe_id,
-      name: r.games.name,
+      name: r.games.name_ja ?? r.games.name,
       creatorName: r.games.creator_name,
       thumbnailUrl: r.games.thumbnail_url,
       headline: r.headline,

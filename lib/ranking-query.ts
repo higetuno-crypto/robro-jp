@@ -20,6 +20,7 @@ interface SnapshotRow {
 interface GameRow {
   universe_id: number;
   name: string;
+  name_ja: string | null;
   creator_name: string | null;
   thumbnail_url: string | null;
   is_japanese: boolean;
@@ -74,7 +75,7 @@ async function fetchGames(
   if (universeIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('games')
-    .select('universe_id, name, creator_name, thumbnail_url, is_japanese, genre_slug, genre_l1, first_seen_at')
+    .select('universe_id, name, name_ja, creator_name, thumbnail_url, is_japanese, genre_slug, genre_l1, first_seen_at')
     .in('universe_id', universeIds);
   if (error) throw error;
   const map = new Map<number, GameRow>();
@@ -193,7 +194,7 @@ export async function getRanking(
     rows.push({
       universeId: s.universe_id,
       rank: currentRank,
-      name: g.name,
+      name: g.name_ja ?? g.name,
       creatorName: g.creator_name,
       thumbnailUrl: g.thumbnail_url,
       playing: s.playing,

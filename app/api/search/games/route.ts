@@ -54,9 +54,9 @@ export async function GET(request: Request) {
   const dbPromise = supabase
     .from('games')
     .select(
-      'universe_id, place_id, name, creator_name, thumbnail_url, is_japanese, game_snapshots(playing, captured_at)'
+      'universe_id, place_id, name, name_ja, creator_name, thumbnail_url, is_japanese, game_snapshots(playing, captured_at)'
     )
-    .or(`name.ilike.${pattern},creator_name.ilike.${pattern}`)
+    .or(`name.ilike.${pattern},name_ja.ilike.${pattern},creator_name.ilike.${pattern}`)
     .limit(limit);
 
   // ====== 2. Roblox API 検索（並列） ======
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
     return {
       universeId: r.universe_id,
       placeId: r.place_id,
-      name: r.name,
+      name: r.name_ja ?? r.name,
       creatorName: r.creator_name,
       thumbnailUrl: r.thumbnail_url,
       playing: latestPlaying,
