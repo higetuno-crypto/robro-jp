@@ -40,21 +40,29 @@ export async function generateMetadata(
     return { title: 'ゲームが見つかりません' };
   }
   const supabase = createBrowserClient();
-  const game = await fetchGameDetail(supabase, universeId).catch(() => null);
+  const [game, streamingMeta] = await Promise.all([
+    fetchGameDetail(supabase, universeId).catch(() => null),
+    fetchStreamingMeta(supabase, universeId).catch(() => null),
+  ]);
   if (!game) return { title: 'ゲームが見つかりません' };
 
-  const desc = game.description
-    ? game.description.replace(/\s+/g, ' ').slice(0, 160)
-    : `${game.name}（${game.creatorName ?? '開発者不明'}）の Roblox ゲーム情報、現在CCU、24時間推移、タグ、配信向け情報。`;
+  // REC-001：検索意図ベースのテンプレに統一。pitch があればフックとして使う
+  const pitch = streamingMeta?.shortPitchJa?.trim() || null;
+  const titleBase = pitch
+    ? `${game.name} | ${pitch}`
+    : `${game.name} | Roblox ゲーム情報`;
+  const desc = pitch
+    ? `${game.name}：${pitch}。同時接続数（CCU）の推移と日本語タグ・配信向け情報を集約。`
+    : `${game.name} の同時接続数（CCU）推移と日本語タグ・配信向け情報。Roblox ゲームの日本人向けまとめ。`;
   const url = `https://ro-brojp.com/game/${universeId}`;
   const ogImage = `https://ro-brojp.com/api/og/game/${universeId}`;
 
   return {
-    title: game.name,
+    title: titleBase,
     description: desc,
     alternates: { canonical: url },
     openGraph: {
-      title: `${game.name} | ro-brojp`,
+      title: `${titleBase} | ro-brojp`,
       description: desc,
       url,
       type: 'article',
@@ -64,7 +72,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: game.name,
+      title: titleBase,
       description: desc,
       images: [ogImage],
     },
