@@ -6,8 +6,18 @@ import { formatRelativeJa } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: '急上昇 Roblox ゲームランキング',
-  description: '前回スナップショットからの CCU 伸び率で並べた急上昇 Roblox ゲーム TOP100。',
+  description:
+    '直近で同時接続数（CCU）が急増している Roblox ゲームを変動率で抽出。今ノってきている話題作をリアルタイムで追える。',
   alternates: { canonical: 'https://ro-brojp.com/trending' },
+  openGraph: {
+    title: '急上昇 Roblox ゲームランキング | ro-brojp',
+    description:
+      '直近で同時接続数（CCU）が急増している Roblox ゲームを変動率で抽出。',
+    url: 'https://ro-brojp.com/trending',
+    type: 'website',
+    locale: 'ja_JP',
+    siteName: 'ro-brojp',
+  },
 };
 
 /**
@@ -24,7 +34,10 @@ export default async function TrendingRankingPage() {
 
   return (
     <section>
-      <div className="px-3 py-2 text-[13px] text-muted-foreground">
+      <h1 className="px-3 pt-3 pb-1 text-[14px] font-medium">
+        急上昇中の Roblox ゲーム
+      </h1>
+      <div className="px-3 pb-2 text-[13px] text-muted-foreground">
         {rows.length > 0
           ? `${formatRelativeJa(capturedAt)} ・ 急上昇 TOP${rows.length}`
           : 'スナップショットが2点以上揃うと表示されます（cronが最低2回回るまで待機）。'}

@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "analytics:collect": "pnpm dlx dotenv-cli -e .env.local -- pnpm dlx tsx scripts/collect-snapshot.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

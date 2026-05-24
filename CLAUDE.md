@@ -26,6 +26,14 @@
 - **迷った時**：UI設計原則 と 拡張設計ガイドライン を最優先で参照
 - **スキーマ変更時**：必ず確認を取る（勝手に進めない）
 - **新機能追加時**：拡張設計ガイドラインに沿っているか検証
+- **SEO目的のサイト編集（メタタグ・タイトル・description・JSON-LD・llms.txt・OG画像・sitemap 等）は事前確認不要・事後報告でOK**（2026-05-24 Yuki 指示）。ただし Roblox 規約（運営コンプライアンス章）は厳守
+
+## 関連リポジトリ
+
+- **`higetuno-crypto/robro-jp-analytics`**（private）— SEO/GSC 週次自動収集とレポート生成。ローカル：`C:\Users\higes\claudecode\robro-jp-analytics\`
+  - 「robro-jp の今週のSEOレポート作って」で `reports/YYYY-MM-DD.md` + `.html` を生成
+  - 既知の SEO 課題は `robro-jp-analytics/known-issues.md` で管理（robro-jp 本体を直したら該当 KI を削除）
+  - 仕組みは taisyoku（失業給付情報サイト）の同等システムの移植版
 
 ---
 
