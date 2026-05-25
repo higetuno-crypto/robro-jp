@@ -136,7 +136,14 @@ export default async function GameDetailPage(
     url: `https://ro-brojp.com/game/${universeId}`,
     image: game.thumbnailUrl ?? undefined,
     inLanguage: game.isJapanese ? 'ja' : undefined,
+    applicationCategory: 'Game',
     gamePlatform: 'Roblox',
+    // publisher: ゲームが乗っているプラットフォーム提供者。
+    // 公式サービスである旨は別途フッターで否定明記、author に実際の開発者を載せて区別する（CLAUDE.md §2 許容範囲）
+    publisher: {
+      '@type': 'Organization',
+      name: 'Roblox Corporation',
+    },
     author: game.creatorName
       ? {
           '@type': game.creatorType === 'Group' ? 'Organization' : 'Person',
