@@ -1,0 +1,359 @@
+# ro-brojp ― 日本人向け Roblox 発見サイト・フルテキスト版
+
+> 日本語圏のプレイヤーと配信者に向けて、Roblox ゲームを「数字の翻訳ではなく、
+> 何が面白いか・誰向けか・英語不要か・配信向きかを日本語で翻訳する」発見サイト。
+> リアルタイム CCU ランキング、ユーザー集合知タグ、3ボタン投票、配信者向けメタ情報、
+> クリエイター自薦登録を集約する。
+> サイト URL: https://ro-brojp.com/
+> robro-jp は Roblox Corporation の公式サービスではなく、Roblox による承認・提携・
+> スポンサー提供を受けていない独立第三者サイトである。
+
+---
+
+## サイトの目的と北極星
+
+robro-jp の全機能は次の北極星から導出される：
+
+> **優秀なクリエイターが真っ当に評価されればそれでいい。**
+
+このため、ランキング・タグ・投票・編集ピックアップ・クリエイター登録の各機能は、
+「優秀なクリエイターを真っ当に評価することに寄与するか？」という基準で採否を判断する。
+逆に、金銭による露出操作・水増し投票・ステマ・誤認誘導は構造的に排除する。
+
+ユーザー/クリエイター間の直接送金・有料宣伝枠は永続的に実装しない。
+サイト運営費は Google AdSense 等の受動広告で賄う（フェーズ12以降）。
+「広告主と表示順位は無関係」をサイト全体で明示する。
+
+---
+
+## 差別化：「数字の翻訳ではなく面白さの通訳」
+
+他の Roblox 情報サイト（Rolimons、RoMonitor、robloxgame.jp）は「人気ゲームの数値比較」
+を主軸にしている。robro-jp は別ポジションを取る：
+
+- **日本語ファースト** — UI・デフォルト並び順・コピーは日本語ユーザーを中心に設計
+- **面白さの通訳** — タイトルと CCU だけでは伝わらない「何が面白いか・誰向けか・
+  英語不要か・配信向きか」を日本語で要約する
+- **運営解説 + ユーザー集合知のハイブリッド** — 運営が一言ピッチを与え、その上に
+  ユーザー投票タグを重ねて意味付け
+- **配信者ファースト導線** — 配信者が「紹介しやすい」「企画が作れる」「OG 画像が映える」
+  状態を作り、X 等への流入ハブになる
+- **日本人向けの近似** — Roblox 公式 country=JP フィルタは認証必須で匿名API から
+  取得不能。代わりにタイトル・説明の日本語スコア（`is_japanese` 判定）を一次シグナル、
+  最終的にはユーザー投票で集合知ランキングを組み上げる方針に移行
+
+---
+
+## データソースと収集ロジック
+
+すべて Roblox 公式 API のみを使用する。`.ROBLOSECURITY` クッキー運用や
+ヘッドレスログイン・Cloudflare バイパス・rate limit 回避は行わない。
+User-Agent には `robro-jp` と連絡先を含め、身元秘匿しない（Creator Terms §7 準拠）。
+
+### 取得元
+
+- **explore-api**（主ソース）：`apis.roblox.com/explore-api/v1/get-sort-content`。
+  `top-playing-now` / `top-trending` / `up-and-coming` / `top-revisited` などの
+  複数 sort を union して上位500件を構築
+- **games/v1**：UniverseId 100件単位でゲーム詳細・CCU を取得。バッチ間 500ms ディレイ
+- **thumbnails API**：サムネ URL を取得（自前で再配信せず CDN 直リンクのみ使用）
+- **users.roblox.com/v1**：クリエイター自薦登録の本人確認時に Roblox プロフィール
+  description（bio）を取得して照合（フェーズ10）。one-shot verification のみで
+  bio 本文の長期保存はしない
+
+### 更新頻度
+
+- ゲーム CCU スナップショット：10分間隔（Vercel Cron）
+- ゲーム詳細：日次〜週次で再取得
+- ランキング画面の ISR：5分（`revalidate = 300`）
+- 429 を正常系として扱い、指数バックオフ＋jitter＋強キャッシュで運用。endpoint
+  ごとに kill switch を用意
+
+### 取得しないもの
+
+- 個別ユーザーのプレイ履歴（プロファイリング禁止／Creator Third-Party App Policy）
+- 13歳未満ユーザーの個人情報（COPPA・日本個人情報保護法）
+- Roblox から取得した内容を LLM の fine-tuning / RAG / embeddings 訓練データに
+  投入することは禁止（Roblox Creator Terms 準拠）
+
+---
+
+## ランキングの種類と意味
+
+ランキング系ページは「事実を淡々と提示する」UI 思想で統一されている（1位も100位も
+同じ行の高さ・同じフォントサイズ・同じサムネサイズ）。
+
+### 集計型ランキング
+
+- **/**（日本で人気）：ユーザー投票で立ち上げる日本ユーザー向けランキング。
+  集計が薄い期間は `is_japanese` 判定ベースの推定型ランキングにフォールバック
+- **/trending**（急上昇）：直近で CCU が急増しているゲームを変動率で抽出
+- **/categories**（カテゴリ別）：Roblox 詳細 API 由来の genre_slug 別ランキング
+- **/categories/[slug]**：カテゴリ単体のランキング
+- **/new**（今週の新着）：直近1週間に robro-jp が初検出したゲーム
+- **/global**（全世界総合）：全世界 CCU 順 TOP100
+
+### ユーザー投票ベース
+
+- **/likes**（❤️好き）：「好き」ボタンの投票が多い順
+- **/saves**（⭐お気に入り）：「お気に入り」票が多い順
+- **/recommends**（🔥頼むから人来て）：強い推薦票が多い順
+
+3ボタン投票の重みは 0.5 / 1.0 / 2.1（行動コストが高いほど情報価値も高いという
+原理）。時間減衰の半減期は7日。CCU との合成式でベイズ平均ランキングを構成する。
+
+---
+
+## ユーザー集合知（タグ・3ボタン投票）の仕組み
+
+### タグ機能（フェーズ6）
+
+タグは3層構造：
+1. **公式タグ** — 運営が骨格として与える
+2. **ユーザー推薦タグ** — `tag_master` のプールからユーザーが選択
+3. **自由入力タグ** — MVP では封印（モデレーション負荷を抑える）
+
+タグの集計は `vote_count` と confidence_score（`vote_count / (vote_count + 10)`）で
+表現する。確信度の低いタグは UI 上で薄く表示される。
+
+ネガティブ表現は辞書で置換：
+- 「クソゲー」→「好み分かれる」
+- 「治安終わってる」→「治安に波あり」
+- 「ガキ向け」→「年齢層低めの印象」
+
+### 3ボタン投票（フェーズ8）
+
+- ❤️ 好き（weight 0.5）：軽い気持ちで押せる、CTR ボタン的役割
+- ⭐ お気に入り（weight 1.0）：あとで遊びたい、選別シグナル
+- 🔥 頼むから人来て（weight 2.1）：強い推薦、過疎ゲーム救済シグナル
+
+レートリミット：1 account × 1 ボタン = 24時間内1票、1 account = 60秒20票・
+1日100票。違反は 429。
+
+### 投票ログ retention
+
+`game_tag_vote_logs` と `game_button_vote_logs` は 6ヶ月〜1年保存する
+（日本プロバイダ責任制限法の発信者情報開示請求に備える）。
+
+### サイト内投票の位置づけ（重要）
+
+❤️⭐🔥 およびタグ投票は **robro-jp 独自のサイト内投票** であり、Roblox 公式の
+Discover / 評価 / 推薦 / ランキングを表すものではない。各投票 UI 近傍に
+「robro-jp 独自のサイト内投票」である旨を明記している。
+
+---
+
+## 配信者向け機能（フェーズ7）
+
+配信者・インフルエンサーが「今夜の配信ネタ」を5秒で選べる専用導線。
+
+### /stream（ハブ）
+
+用途別スロットのカードグリッド：
+- **collab**（コラボ向き）
+- **viewer**（視聴者参加向き）
+- **short**（短時間向き）
+- **reaction**（初見リアクション向き）
+- **no-english**（英語ほぼ不要）
+- **loud**（叫ぶ系・配信映え）
+
+### /stream/[slot]
+
+該当タグを持つゲーム一覧。並び順は `confidence_score DESC, editorial_score_stream DESC,
+vote_count DESC`。
+
+### StreamMetaPanel（ゲーム詳細に条件付き表示）
+
+`game_streaming_meta` が存在するゲームだけに表示される運営手動投入の配信向け情報：
+- 一言ピッチ（5〜60字）
+- 配信向けポイント最大3つ
+- FitMatrix（ソロ/コラボ/視聴者参加/切り抜きの4軸）
+- 最初の10分ガイド
+- 今なぜ配信向きか
+- 注意点（英語依存度・BGM・年齢感・チャット露出）
+
+### シェアカード（OG 画像）
+
+`/api/og/game/[id]` と `/api/og/featured/[slug]` で `next/og` を使い、
+1200x630 のシェアカードを動的生成する。X 共有での見栄えを担保する。
+
+### 文言の禁止/置換
+
+管理画面での入力時に以下をブロック：
+- **禁止**：「安全に配信できます」「著作権的に問題ありません」「絶対バズる」
+  「クソゲー」「ガキ向け」「治安終わってる」
+- **置換推奨**：絶対バズる → 配信映えしやすい／クソゲー → 好み分かれる
+
+---
+
+## クリエイター自薦登録（フェーズ10）
+
+Roblox 上の日本人クリエイターが自分のページを robro-jp に登録できる仕組み。
+ただし広告枠の販売ではない（直接送金は永続的に実装しない）。
+
+### 本人確認の方法
+
+1. クリエイターが robro-jp で確認コード（短い英数字）を発行
+2. Roblox プロフィール bio に確認コードを24時間以内に掲載
+3. robro-jp が `users.roblox.com/v1/users/{id}` の公式 API で description を取得
+4. 確認コードが含まれていれば本人と認定
+
+**パスワード、`.ROBLOSECURITY` Cookie、アクセストークンの入力は一切求めない。**
+
+### bio 本文の扱い
+
+bio 全文は one-shot で照合に使うのみで、長期保存しない（プロファイリング寄りに
+ならないように）。
+
+### Roblox OAuth 連携の不採用
+
+Third Party App Policy の scope 制限・プロファイリング制限に抵触するリスクが
+高いため、Roblox OAuth は採用しない。
+
+---
+
+## Roblox との関係（非公式・非提携）
+
+robro-jp は次の点を明示する：
+
+- robro-jp は Roblox Corporation の公式サービスではない
+- Roblox による承認・提携・スポンサー提供を受けていない
+- ゲームデータは Roblox 公式 API から取得した二次情報である
+- 「公式」「公認」「パートナー」「認定」等の表現は一切使わない
+
+### 商標表記の方針
+
+- **Roblox ロゴ画像は使わない**（公式ガイドラインに従い、Roblox Tilt も使わない）
+- **"Now on Roblox" バッジ画像は使わない**（テキスト表現「Robloxで見る」「Robloxで開く」は可）
+- **サイト名・ドメイン**：`robro.fortunep.net`（"ro-bro" 発音、Roblox 要素なし）。
+  `roblo.fortunep.net` は "Roblox" の部分文字列を含むため不採用
+- **公式 UI に寄せない**：favicon・OG 画像・ランキング UI 語彙で Roblox 公式 UI と
+  混同される表現を使わない
+
+### 日本法上の関係
+
+日本ユーザーとの契約相手は Roblox 合同会社であることを認識した上で運営している。
+robro-jp の利用規約・プライバシーポリシーは日本法に整合させている。
+
+---
+
+## AI / LLM 訓練データ投入禁止について
+
+Roblox 由来のデータ（`games.description` / ゲーム名 / サムネイル等）を以下の用途に
+**使用しない**：
+
+- LLM の fine-tuning データセット
+- RAG（Retrieval-Augmented Generation）のソースコーパス
+- embeddings 訓練データ
+
+ただし、以下は許容範囲とする：
+
+- Claude Code 等の開発支援ツールが robro-jp のソースコードを参照する
+  （モデル重みを更新しない純粋な読み取り）
+- AI クローラがサイトを巡回し、要約・引用して回答に組み込む
+  （robots.txt で /admin /api /login /auth のみ disallow、それ以外は許可）
+
+将来 robro-jp 自身に AI 機能を載せる場合は、Creator Terms §6 / ToU §8 に従い
+「AI is not human」「AI output is artificially generated」の UI 開示を行う。
+
+---
+
+## データの取り扱い
+
+### fingerprint
+
+サイト内の投票重複防止のために使用する。Robloxアカウントとの紐付けは行わない
+（プロファイリング禁止）。fingerprint は個人関連情報として扱い、第三者提供しない。
+
+### retention
+
+- ゲーム CCU スナップショット：恒久保存（時系列分析のため）
+- 投票生ログ（`game_tag_vote_logs` / `game_button_vote_logs`）：6ヶ月〜1年
+- bio 照合データ：one-shot のみ（保存しない）
+
+### 削除申請
+
+Roblox からの警告時に即時データ削除できる体制を用意：
+- `scripts/purge-roblox-data.ts` で `games` / `game_snapshots` /
+  `game_streaming_meta` を削除
+- 独自データ（タグ投票・featured 記事・3ボタン投票）は維持
+- 通常の削除申請は `/contact` から24時間以内に一次対応
+
+### 13歳未満ユーザー
+
+匿名投票のみで個人情報を収集しない設計。プライバシーポリシーに
+「13歳未満は保護者の同意のもとでご利用」と明記している。
+
+---
+
+## 主要ページ一覧
+
+### ランキング
+
+| URL | 内容 |
+|---|---|
+| https://ro-brojp.com/ | みんなで作る日本ランキング（デフォルト） |
+| https://ro-brojp.com/trending | 急上昇（直近の CCU 急増） |
+| https://ro-brojp.com/categories | カテゴリ別ランキング一覧 |
+| https://ro-brojp.com/categories/[slug] | カテゴリ単体（例：roleplay） |
+| https://ro-brojp.com/new | 今週の新着（直近1週間で初検出） |
+| https://ro-brojp.com/global | 全世界総合 TOP100 |
+
+### ユーザー投票ベース
+
+| URL | 内容 |
+|---|---|
+| https://ro-brojp.com/likes | ❤️好き |
+| https://ro-brojp.com/saves | ⭐お気に入り |
+| https://ro-brojp.com/recommends | 🔥頼むから人来て |
+
+### 発見・編集
+
+| URL | 内容 |
+|---|---|
+| https://ro-brojp.com/tags | タグ一覧（公式 + ユーザー選択式） |
+| https://ro-brojp.com/tags/[slug] | タグ詳細＋紐づくゲーム一覧 |
+| https://ro-brojp.com/stream | 配信ネタハブ |
+| https://ro-brojp.com/stream/[slot] | 配信用途別ゲーム一覧 |
+| https://ro-brojp.com/featured | 編集者ピックアップ |
+| https://ro-brojp.com/featured/[slug] | ピックアップ記事 |
+| https://ro-brojp.com/creators | クリエイター一覧 |
+| https://ro-brojp.com/creators/[id] | クリエイター詳細 |
+| https://ro-brojp.com/creators/register | クリエイター自薦登録 |
+
+### 個別
+
+| URL | 内容 |
+|---|---|
+| https://ro-brojp.com/game/[universeId] | ゲーム詳細（CCU 24時間推移・タグ・配信メタ） |
+| https://ro-brojp.com/feedback | フィードバックボード |
+
+### 法令・運営
+
+| URL | 内容 |
+|---|---|
+| https://ro-brojp.com/privacy | プライバシーポリシー |
+| https://ro-brojp.com/terms | 利用規約 |
+| https://ro-brojp.com/contact | お問い合わせ・削除申請 |
+
+---
+
+## サイト情報
+
+- サイト名：ro-brojp
+- URL：https://ro-brojp.com/
+- 運営方針：個人運営（Yuki）。法人化前
+- 技術スタック：Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS +
+  shadcn/ui + Supabase (PostgreSQL) + Vercel (東京リージョン)
+- 認証：Supabase Auth（Email / Magic Link）。Roblox OAuth は不採用
+- 広告：Google AdSense（フェーズ12以降）。決済プロバイダ（Stripe 等）は不採用
+- 対象読者：日本語圏の Roblox プレイヤー、配信者・インフルエンサー、
+  日本人 Roblox クリエイター
+- データソース基準時点：2026年5月時点の Roblox 公式 API 仕様
+
+## サイトコンセプトのまとめ
+
+robro-jp は **数字の翻訳ではなく、面白さの通訳**。Roblox 公式検索では埋もれがちな
+日本人向けゲームを、ユーザー集合知と編集判断のハイブリッドで発見可能にし、
+配信者と日本人クリエイターを真っ当に評価することを目的とする。
+Roblox との関係は独立第三者であり、公式ではない。
