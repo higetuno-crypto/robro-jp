@@ -6,8 +6,18 @@ import { formatRelativeJa } from '@/lib/format';
 
 export const metadata: Metadata = {
   title: '全世界総合 Roblox ゲームランキング',
-  description: '全世界の Roblox ゲームを最新スナップショットの CCU 順で並べた総合ランキング TOP100。',
+  description:
+    '世界全体で今プレイされている Roblox ゲームを同時接続数（CCU）順で一覧。日本で人気のタイトルとの違いを比べたい人向け。',
   alternates: { canonical: 'https://ro-brojp.com/global' },
+  openGraph: {
+    title: '全世界総合 Roblox ゲームランキング | ro-brojp',
+    description:
+      '世界全体で今プレイされている Roblox ゲームを同時接続数（CCU）順で一覧。',
+    url: 'https://ro-brojp.com/global',
+    type: 'website',
+    locale: 'ja_JP',
+    siteName: 'ro-brojp',
+  },
 };
 
 /**
@@ -25,7 +35,10 @@ export default async function GlobalRankingPage() {
 
   return (
     <section>
-      <div className="px-3 py-2 text-[13px] text-muted-foreground">
+      <h1 className="px-3 pt-3 pb-1 text-[14px] font-medium">
+        全世界で今プレイされている Roblox ゲーム
+      </h1>
+      <div className="px-3 pb-2 text-[13px] text-muted-foreground">
         {rows.length > 0
           ? `${formatRelativeJa(capturedAt)} ・ 全世界総合 TOP${rows.length}`
           : 'データ収集中です。cron が一度回れば表示されます。'}
