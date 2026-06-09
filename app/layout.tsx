@@ -25,10 +25,10 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   metadataBase: new URL('https://ro-brojp.com'),
   title: {
-    default: 'ro-brojp — 日本人向け Roblox 発見サイト',
+    default: 'ro-brojp｜Roblox ゲーム非公式まとめwiki（日本語）',
     template: '%s | ro-brojp',
   },
-  description: '日本語圏向け Roblox ゲームのリアルタイム CCU ランキング・タグ・配信ネタ・クリエイター発見サイト',
+  description: 'Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式情報サイト。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
 };
 
 /**
@@ -67,11 +67,11 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
               name: 'ro-brojp',
-              alternateName: '日本人向け Roblox 発見サイト',
+              alternateName: 'Roblox ゲーム非公式まとめwiki（日本語）',
               url: 'https://ro-brojp.com',
               inLanguage: 'ja',
               description:
-                '日本語圏向け Roblox ゲームのリアルタイム CCU ランキング・タグ・配信ネタ・クリエイター発見サイト',
+                'Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式情報サイト。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
               potentialAction: {
                 '@type': 'SearchAction',
                 target: 'https://ro-brojp.com/search?q={search_term_string}',
