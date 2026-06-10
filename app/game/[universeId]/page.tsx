@@ -14,6 +14,8 @@ import { fetchStreamingMeta } from '@/lib/streaming';
 import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
 import { ReportButton } from '@/components/ReportButton';
+import { fetchTips } from '@/lib/strategy-tips';
+import { StrategyTips } from '@/components/strategy/StrategyTips';
 
 /**
  * 個別ゲーム詳細ページ
@@ -26,6 +28,11 @@ import { ReportButton } from '@/components/ReportButton';
  *
  * CLAUDE.md UI原則：ランキング側と同様、装飾は最小限。
  */
+
+// 攻略Tips（UGC）は機能フラグで段階リリース（拡張ガイドライン#6）。
+// 法令対応（/terms・/privacy のUGC条項）と種まきが整うまでは
+// NEXT_PUBLIC_FEATURE_STRATEGY_TIPS 未設定で非表示にする。
+const STRATEGY_TIPS_ENABLED = process.env.NEXT_PUBLIC_FEATURE_STRATEGY_TIPS === 'true';
 
 export const revalidate = 300;
 
@@ -89,7 +96,7 @@ export default async function GameDetailPage(
   if (!Number.isFinite(universeId) || universeId <= 0) notFound();
 
   const supabase = createBrowserClient();
-  const [initialGame, snaps, tagBundle, allTags, streamingMeta, voteCounts] = await Promise.all([
+  const [initialGame, snaps, tagBundle, allTags, streamingMeta, voteCounts, strategyTips] = await Promise.all([
     fetchGameDetail(supabase, universeId),
     fetchRecentSnapshots(supabase, universeId, 24),
     fetchGameTags(supabase, universeId, { userTagLimit: 5 }).catch((e) => {
@@ -107,6 +114,10 @@ export default async function GameDetailPage(
     fetchGameButtonVotes(supabase, universeId).catch((e) => {
       console.error('[detail fetchGameButtonVotes]', e);
       return { like: 0, save: 0, recommend: 0 };
+    }),
+    fetchTips(universeId).catch((e) => {
+      console.error('[detail fetchTips]', e);
+      return [];
     }),
   ]);
   // 検索からの遷移などで DB に未登録のゲームは on-demand で取得して upsert する
@@ -287,6 +298,10 @@ export default async function GameDetailPage(
           ) : null}
         </div>
       ) : null}
+      {/* みんなの攻略・コツ（集合知型UGC）。機能フラグで段階リリース */}
+      {STRATEGY_TIPS_ENABLED && (
+        <StrategyTips universeId={universeId} initialTips={strategyTips} />
+      )}
       {/* 現在CCU */}
       <div className="mt-5 flex items-baseline gap-2">
         <div className="text-[13px] text-muted-foreground">現在CCU</div>

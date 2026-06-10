@@ -97,6 +97,58 @@ export function hasBlockingIssue(issues: ModerationIssue[]): boolean {
   return issues.some((i) => i.severity === 'block');
 }
 
+/**
+ * ユーザー投稿（攻略Tips等）用のブロック語。
+ *
+ * 管理者入力用 BLOCK_WORDS との違い：
+ *  - affiliation 語（公式 / 公認 / パートナー / 認定）は **ブロックしない**。
+ *    これは robro-jp 自身が「公式」を騙るのを防ぐための語であり、
+ *    ユーザーが攻略で「公式アップデートで追加された武器」等と書くのは正常表現のため。
+ *  - 人格攻撃・差別・脅迫・属性蔑視のみブロックする（資料5 L29-45 Community Standards）。
+ */
+const USER_TIP_BLOCK_WORDS: readonly string[] = [
+  '死ね',
+  '殺す',
+  'クソゲー',
+  'ガイジ',
+  'キモい',
+  'ブス',
+  'デブ',
+  'チー牛',
+  'ガキ向け',
+  'ジジイ向け',
+  'ババア向け',
+  '知恵遅れ',
+  '治安終わってる',
+  '民度最悪',
+];
+
+/**
+ * ユーザー投稿（攻略Tips）用モデレーション。
+ * 空配列なら問題なし。block が1つでもあれば保存を拒否するのが呼び出し側の責務。
+ */
+export function moderateUserTip(input: string): ModerationIssue[] {
+  if (!input) return [];
+  const issues: ModerationIssue[] = [];
+  for (const w of USER_TIP_BLOCK_WORDS) {
+    if (input.includes(w)) {
+      issues.push({ severity: 'block', word: w });
+    }
+  }
+  for (const r of REPLACE_WORDS) {
+    if (input.includes(r.from)) {
+      if (issues.some((i) => i.word === r.from)) continue;
+      issues.push({
+        severity: 'warn',
+        word: r.from,
+        suggestion: r.to,
+        reason: r.why,
+      });
+    }
+  }
+  return issues;
+}
+
 /** フォームの「全フィールドまとめてチェック」用 */
 export function moderateFields(
   fields: Record<string, string | null | undefined>
