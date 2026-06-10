@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <main className="max-w-3xl mx-auto px-3 py-6 text-[14px] leading-relaxed space-y-6">
       <header>
         <h1 className="text-[20px] font-semibold">プライバシーポリシー</h1>
-        <p className="mt-1 text-[12px] text-muted-foreground">最終更新日：2026年4月30日</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">最終更新日：2026年6月10日</p>
       </header>
 
       <section className="space-y-2">
@@ -40,6 +40,8 @@ export default function PrivacyPage() {
         </ul>
         <p>
           上記のIP・ユーザーエージェントはハッシュ化された「fingerprint」として記録され、元の値を復元することはできません。
+          ただし、<strong>攻略・コツ投稿（攻略Tips）を行った場合に限り</strong>、発信者情報開示請求への対応のため、
+          後述「2.4」のとおり生のIPアドレス等を投稿本文と分離して短期間保管します。
         </p>
 
         <h3 className="text-[14px] font-medium mt-3">2.2 ログイン利用者から取得する情報</h3>
@@ -53,6 +55,7 @@ export default function PrivacyPage() {
           <li>本サイト内でのマイリスト（⭐ お気に入り登録したゲームのID一覧）</li>
           <li>本サイト内でのタグ投票履歴</li>
           <li>本サイト内でのご意見投稿、フィードバック投票</li>
+          <li>本サイト内での攻略・コツ投稿（攻略Tips）の投稿内容・👍投票・通報の履歴</li>
         </ul>
 
         <h3 className="text-[14px] font-medium mt-3">2.3 取得しない情報</h3>
@@ -61,6 +64,27 @@ export default function PrivacyPage() {
           <li>本サイト内投票は本サイトの独自集計であり、Roblox 側へ送信されることはありません。</li>
           <li>位置情報・連絡先・カメラ・マイク等のセンシティブな情報は取得しません。</li>
         </ul>
+
+        <h3 className="text-[14px] font-medium mt-3">2.4 攻略・コツ投稿（攻略Tips）に関して取得する情報</h3>
+        <p>
+          本サイトのゲーム詳細ページの「みんなの攻略・コツ」欄に投稿（攻略・コツ投稿）を行う場合、
+          アカウントの有無（匿名投稿を含む）にかかわらず、以下を取得します。
+        </p>
+        <ul className="list-disc pl-6 space-y-1">
+          <li>投稿本文、選択したカテゴリ、投稿日時</li>
+          <li>上記2.1の fingerprint（重複投稿・荒らしの防止用）</li>
+          <li>
+            <strong>発信者情報開示請求への対応のためにのみ</strong>、送信時の IP アドレス
+            （ハッシュ化していない生の値）およびユーザーエージェント文字列
+          </li>
+        </ul>
+        <p>
+          このうち生の IP アドレス等は、投稿本文とは<strong>分離した専用の記録（開示用ログ）</strong>として保管し、
+          本サイトの通常の表示・運用経路からは参照できません。当該記録には運営の管理用権限からのみアクセスでき、
+          取得日から<strong>3ヶ月（90日）</strong>を経過したものは自動的に削除されます。
+          これらの情報は、利用者または第三者から正当な発信者情報開示請求その他の法的手続きがあった場合に限り、開示の対象となります。
+          本サイトが当該情報を広告・分析・プロファイリング等の目的で利用することはありません。
+        </p>
       </section>
 
       <section className="space-y-2">
@@ -84,6 +108,8 @@ export default function PrivacyPage() {
           <li><strong>投票・タグ投票の生ログ</strong>（fingerprint を含む）：取得日から原則 6ヶ月以上1年以内（日本のプロバイダ責任制限法に基づく発信者情報開示請求への対応のため）。期間経過後は順次匿名化または削除します。</li>
           <li><strong>アカウント情報</strong>：アカウント有効期間中は保持。退会申請から30日以内に削除します。</li>
           <li><strong>アクセスログ</strong>：90日を目安に削除します。</li>
+          <li><strong>攻略・コツ投稿の監査ログ</strong>（投稿・非表示・削除の履歴。fingerprint を含む）：取得日から原則 6ヶ月以上1年以内（不正・荒らし対応および発信者情報開示請求への備えのため）。</li>
+          <li><strong>攻略・コツ投稿時の生の IP アドレス等</strong>（開示用ログ。前記「2.4」）：取得日から3ヶ月（90日）。経過後は自動的に削除します。</li>
         </ul>
       </section>
 
@@ -110,6 +136,7 @@ export default function PrivacyPage() {
         <ul className="list-disc pl-6 space-y-1">
           <li>13歳未満の方は保護者の同意のもとでご利用ください。13歳未満の方が本サイトを利用したことによる情報取得が判明した場合、速やかに該当情報を削除します。</li>
           <li>将来本サイトに広告が表示される場合、未成年に対するパーソナライズ広告（行動ターゲティング広告）は制限される場合があります。</li>
+          <li>13歳未満を含む未成年の方が攻略・コツ投稿その他の投稿機能を利用する際は、氏名・住所・学校名・連絡先等、ご自身や他者を特定できる情報を投稿しないようご注意ください。</li>
         </ul>
         <p>保護者の方からの削除請求は、下記「8. お問い合わせ・削除請求」よりご連絡ください。</p>
       </section>
