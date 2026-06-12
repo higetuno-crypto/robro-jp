@@ -153,6 +153,45 @@ export async function fetchTipPrompts(universeId: number): Promise<StrategyTipPr
   }));
 }
 
+// カテゴリ → FAQ の質問文テンプレ（ゲーム名を差し込む）
+const CATEGORY_QUESTION: Record<StrategyTipCategory, (game: string) => string> = {
+  early: (g) => `「${g}」の序盤の進め方は？`,
+  earn: (g) => `「${g}」の効率のいい稼ぎ方は？`,
+  boss: (g) => `「${g}」のボス・強敵の攻略は？`,
+  trick: (g) => `「${g}」の裏技・小技は？`,
+  glossary: (g) => `「${g}」のよく使う用語の意味は？`,
+  controls: (g) => `「${g}」の操作のコツは？`,
+  other: (g) => `「${g}」の攻略・コツは？`,
+};
+
+/**
+ * 公開Tipsから FAQPage 構造化データ（JSON-LD）を作る。長尾クエリ回収・AI Overview 取り込み用。
+ *
+ * - カテゴリごとに最も👍が多い Tip を回答に採用（tips は👍降順前提＝fetchTips）。
+ * - 回答テキスト（Tip本文）はページ上にも表示されている（Google の「可視内容と一致」要件を満たす）。
+ *   そのため呼び出し側はフラグON（Tips セクション表示時）に限ること。
+ * - Tips が無ければ null（構造化データを出さない）。
+ */
+export function buildTipsFaqLd(
+  gameName: string,
+  tips: StrategyTip[]
+): Record<string, unknown> | null {
+  if (tips.length === 0) return null;
+  const topByCategory = new Map<StrategyTipCategory, StrategyTip>();
+  for (const t of tips) {
+    // DB行の category は型キャストのみ。未知カテゴリでページ全体を落とさないようスキップ
+    if (!isValidTipCategory(t.category)) continue;
+    if (!topByCategory.has(t.category)) topByCategory.set(t.category, t);
+  }
+  const mainEntity = [...topByCategory.entries()].map(([cat, tip]) => ({
+    '@type': 'Question',
+    name: CATEGORY_QUESTION[cat](gameName),
+    acceptedAnswer: { '@type': 'Answer', text: tip.bodyJa },
+  }));
+  if (mainEntity.length === 0) return null;
+  return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity };
+}
+
 /** 投稿レート集計（ログインは account_id 優先、匿名は fingerprint） */
 export async function countRecentTips(
   supabase: SupabaseClient,

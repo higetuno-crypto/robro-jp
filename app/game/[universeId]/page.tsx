@@ -14,7 +14,7 @@ import { fetchStreamingMeta } from '@/lib/streaming';
 import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
 import { ReportButton } from '@/components/ReportButton';
-import { fetchTips, fetchTipPrompts } from '@/lib/strategy-tips';
+import { fetchTips, fetchTipPrompts, buildTipsFaqLd } from '@/lib/strategy-tips';
 import { StrategyTips } from '@/components/strategy/StrategyTips';
 
 /**
@@ -195,6 +195,9 @@ export default async function GameDetailPage(
       { '@type': 'ListItem', position: 2, name: game.name, item: `https://ro-brojp.com/game/${universeId}` },
     ],
   };
+  // 攻略Tips（公開時のみ）：カテゴリ別トップTipを FAQPage 構造化データに（長尾SEO・AI Overview 取り込み）。
+  // 回答本文はページ上の Tips セクションにも表示されるため Google の可視内容一致要件を満たす。
+  const faqLd = STRATEGY_TIPS_ENABLED ? buildTipsFaqLd(game.name, strategyTips) : null;
 
   return (
     <section className="max-w-3xl mx-auto px-3 py-3">
@@ -206,6 +209,13 @@ export default async function GameDetailPage(
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
+      {/* 攻略Tips の FAQPage 構造化データ。ユーザー投稿本文が入るため、script 終了タグによるブレイクアウト防止に < を < へエスケープ */}
+      {faqLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, '\\u003c') }}
+        />
+      )}
       {/* パンくず */}
       <div className="text-[13px] text-muted-foreground mb-3">
         <Link href="/" className="hover:underline">
