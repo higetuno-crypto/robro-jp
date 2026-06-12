@@ -14,7 +14,7 @@ import { fetchStreamingMeta } from '@/lib/streaming';
 import { StreamMetaPanel } from '@/components/stream/StreamMetaPanel';
 import { formatNumber, formatRelativeJa } from '@/lib/format';
 import { ReportButton } from '@/components/ReportButton';
-import { fetchTips } from '@/lib/strategy-tips';
+import { fetchTips, fetchTipPrompts } from '@/lib/strategy-tips';
 import { StrategyTips } from '@/components/strategy/StrategyTips';
 
 /**
@@ -126,6 +126,14 @@ export default async function GameDetailPage(
     game = await ensureGameInDb(universeId);
     if (!game) notFound();
   }
+
+  // 問いかけ（型）はフラグON時のみ取得（0023 未適用時の無駄なクエリ/エラーログを避ける）
+  const strategyTipPrompts = STRATEGY_TIPS_ENABLED
+    ? await fetchTipPrompts(universeId).catch((e) => {
+        console.error('[detail fetchTipPrompts]', e);
+        return [];
+      })
+    : [];
 
   const latest = snaps.length > 0 ? snaps[snaps.length - 1] : null;
   const robloxUrl = game.placeId
@@ -300,7 +308,11 @@ export default async function GameDetailPage(
       ) : null}
       {/* みんなの攻略・コツ（集合知型UGC）。機能フラグで段階リリース */}
       {STRATEGY_TIPS_ENABLED && (
-        <StrategyTips universeId={universeId} initialTips={strategyTips} />
+        <StrategyTips
+          universeId={universeId}
+          initialTips={strategyTips}
+          prompts={strategyTipPrompts}
+        />
       )}
       {/* 現在CCU */}
       <div className="mt-5 flex items-baseline gap-2">

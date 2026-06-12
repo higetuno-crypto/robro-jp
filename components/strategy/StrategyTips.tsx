@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { StrategyTip, StrategyTipCategory } from '@/lib/strategy-tips';
+import type { StrategyTip, StrategyTipCategory, StrategyTipPrompt } from '@/lib/strategy-tips';
 import { formatRelativeJa } from '@/lib/format';
 
 /**
@@ -44,9 +44,11 @@ const BODY_MAX = 300;
 export function StrategyTips({
   universeId,
   initialTips,
+  prompts,
 }: {
   universeId: number;
   initialTips: StrategyTip[];
+  prompts: StrategyTipPrompt[];
 }) {
   const router = useRouter();
   const [tips, setTips] = useState<StrategyTip[]>(initialTips);
@@ -62,6 +64,8 @@ export function StrategyTips({
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
+  // 問いかけ経由で開いたとき、その質問をモーダル内に表示する
+  const [activePrompt, setActivePrompt] = useState<StrategyTipPrompt | null>(null);
 
   const presentCategories = useMemo(() => {
     const set = new Set(tips.map((t) => t.category));
@@ -76,6 +80,20 @@ export function StrategyTips({
   function flash(msg: string) {
     setNotice(msg);
     setTimeout(() => setNotice(null), 3000);
+  }
+
+  function openBlank() {
+    setActivePrompt(null);
+    setOpen(true);
+  }
+  function openWithPrompt(p: StrategyTipPrompt) {
+    setActivePrompt(p);
+    setCategory(p.category);
+    setOpen(true);
+  }
+  function closeModal() {
+    setOpen(false);
+    setActivePrompt(null);
   }
 
   async function vote(tipId: number) {
@@ -179,6 +197,7 @@ export function StrategyTips({
       setBody('');
       setFormMessage(null);
       setOpen(false);
+      setActivePrompt(null);
       flash('投稿しました。ありがとうございます！');
       router.refresh();
     } catch {
@@ -197,7 +216,7 @@ export function StrategyTips({
         <h2 className="text-[14px] font-medium">みんなの攻略・コツ</h2>
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={openBlank}
           className="inline-flex items-center px-3 py-1.5 text-[13px] border border-foreground hover:bg-muted"
         >
           コツを書く
@@ -208,6 +227,28 @@ export function StrategyTips({
       <p className="text-[11px] text-muted-foreground leading-snug mb-3">
         ここはユーザーが投稿した攻略・コツです。Roblox 公式の情報・攻略ではなく、内容の正確性は保証されません。ログインなしでも投稿・👍できます。
       </p>
+
+      {/* 問いかけ（型）：答える対象を提示して空ページ感を消し、投稿ハードルを下げる */}
+      {prompts.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[11px] text-muted-foreground mb-1.5">
+            みんなが知りたいこと（タップして書く）
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {prompts.map((p) => (
+              <button
+                key={p.promptId}
+                type="button"
+                onClick={() => openWithPrompt(p)}
+                className="text-left text-[12px] leading-snug px-2 py-1 border border-dashed border-border hover:bg-muted hover:border-foreground"
+              >
+                <span className="text-muted-foreground mr-1">Q.</span>
+                {p.promptJa}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* カテゴリフィルタ（Tipsが付いているカテゴリのみ） */}
       {presentCategories.length > 0 && (
@@ -238,7 +279,7 @@ export function StrategyTips({
               <div className="mt-3">
                 <button
                   type="button"
-                  onClick={() => setOpen(true)}
+                  onClick={openBlank}
                   className="inline-flex items-center px-3 py-1.5 text-[13px] border border-foreground hover:bg-muted"
                 >
                   最初のコツを書く
@@ -338,7 +379,7 @@ export function StrategyTips({
         <div
           className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setOpen(false);
+            if (e.target === e.currentTarget) closeModal();
           }}
         >
           <div
@@ -351,7 +392,7 @@ export function StrategyTips({
               <div className="text-[14px] font-medium">攻略・コツを書く</div>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={closeModal}
                 className="text-[13px] px-2 py-1 hover:bg-muted"
                 aria-label="閉じる"
               >
@@ -360,6 +401,13 @@ export function StrategyTips({
             </div>
 
             <div className="p-4 space-y-3">
+              {activePrompt && (
+                <div className="text-[12px] leading-snug bg-muted px-2.5 py-2 border-l-2 border-foreground">
+                  <span className="text-muted-foreground">この質問に答えます：</span>
+                  <br />
+                  Q. {activePrompt.promptJa}
+                </div>
+              )}
               <div>
                 <div className="text-[12px] text-muted-foreground mb-1.5">カテゴリ</div>
                 <div className="flex flex-wrap gap-1.5">

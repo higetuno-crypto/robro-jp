@@ -46,6 +46,13 @@ export interface StrategyTip {
   isMemberAuthor: boolean;
 }
 
+/** 問いかけ（型）：ゲーム別・カテゴリ別の「呼び水質問」。攻略本文ではなく質問のみ。 */
+export interface StrategyTipPrompt {
+  promptId: number;
+  category: StrategyTipCategory;
+  promptJa: string;
+}
+
 export function isValidTipCategory(v: unknown): v is StrategyTipCategory {
   return typeof v === 'string' && STRATEGY_TIP_CATEGORIES.some((c) => c.key === v);
 }
@@ -118,6 +125,32 @@ export async function countTips(universeId: number): Promise<number> {
     .eq('status', 'published');
   if (error) throw error;
   return count ?? 0;
+}
+
+/**
+ * ゲーム別の問いかけ（型・呼び水質問）一覧。is_active のみ、sort_order 昇順。
+ * 公開読み取りは Tips 本体と同じくサーバ専用 service client 経由（anon 公開ポリシーは張らない）。
+ */
+export async function fetchTipPrompts(universeId: number): Promise<StrategyTipPrompt[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('game_strategy_tip_prompts')
+    .select('prompt_id, category, prompt_ja')
+    .eq('universe_id', universeId)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('prompt_id', { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as Array<{
+    prompt_id: number;
+    category: StrategyTipCategory;
+    prompt_ja: string;
+  }>).map((r) => ({
+    promptId: r.prompt_id,
+    category: r.category,
+    promptJa: r.prompt_ja,
+  }));
 }
 
 /** 投稿レート集計（ログインは account_id 優先、匿名は fingerprint） */
