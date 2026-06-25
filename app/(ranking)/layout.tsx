@@ -13,6 +13,7 @@ import type { ReactNode } from 'react';
 
 const tabs: { href: string; label: string }[] = [
   { href: '/', label: '日本で人気' },
+  { href: '/made-in-japan', label: '日本制作' },
   { href: '/trending', label: '急上昇' },
   { href: '/categories', label: 'カテゴリ' },
   { href: '/new', label: '新着' },

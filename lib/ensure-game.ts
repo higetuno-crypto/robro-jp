@@ -20,7 +20,7 @@ export async function ensureGameInDb(
     if (games.length === 0) return null;
     const g = games[0];
 
-    const j = detectJapanese(g.name, g.description);
+    const j = detectJapanese(g.name, g.description, g.name_ja);
     const supabase = createServiceClient();
     const { error } = await supabase.from('games').upsert(
       {

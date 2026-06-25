@@ -9,7 +9,12 @@ export interface RankingRowData {
   name: string;
   creatorName: string | null;
   thumbnailUrl: string | null;
-  playing: number;
+  /**
+   * 現在のCCU（最新スナップショットの playing）。
+   * null = スナップショット未取得（ランキング外の手動追加ゲーム等）＝CCU不明。
+   * 既存のランキングは常に数値を渡すので後方互換。
+   */
+  playing: number | null;
   /**
    * 変動：前スナップショットからの順位差
    *  - null   : 前スナップショットにいなかった（＝NEW扱い）

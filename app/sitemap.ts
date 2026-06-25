@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticUrls: MetadataRoute.Sitemap = [
     '',
+    '/made-in-japan',
     '/trending',
     '/categories',
     '/new',
