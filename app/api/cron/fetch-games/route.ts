@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     const capturedAt = new Date().toISOString();
 
     const gameRows = games.map((g) => {
-      const j = detectJapanese(g.name, g.description);
+      const j = detectJapanese(g.name, g.description, g.name_ja);
       return {
         universe_id: g.id,
         place_id: g.rootPlaceId,

@@ -49,12 +49,20 @@ export interface JapaneseJudgement {
  * - 漢字だけしか無い場合は弱いシグナル（+0.2）※中国語と区別しづらいため
  *
  * しきい値 0.5 以上で is_japanese = true
+ *
+ * nameJa（Roblox の ja-jp ロケール名）も判定対象に含める。
+ * これはクリエイターが意図的に日本語タイトルを設定した時だけ日本語で返るため、
+ * 「英語の正式名・英語の説明だが日本語名を用意している日本人制作ゲーム」を
+ * 取りこぼさないための強いシグナル（英語ゲームの ja-jp 名は英語のまま返る）。
  */
 export function detectJapanese(
   name: string | null | undefined,
-  description: string | null | undefined
+  description: string | null | undefined,
+  nameJa?: string | null | undefined
 ): JapaneseJudgement {
-  const text = `${name ?? ''} ${description ?? ''}`;
+  // name_ja が name と同一（＝日本語ロケール名が無い）の場合は重複させない
+  const jaPart = nameJa && nameJa !== name ? ` ${nameJa}` : '';
+  const text = `${name ?? ''} ${description ?? ''}${jaPart}`;
   if (!text.trim()) return { isJapanese: false, score: 0 };
 
   const kanaCount = (text.match(KANA_REGEX) ?? []).length;
