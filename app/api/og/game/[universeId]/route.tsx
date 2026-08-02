@@ -10,7 +10,7 @@ import { fetchStreamingMeta, pickBadges, englishBarrierLabel } from '@/lib/strea
  *  - 日本語一言ピッチ（stream-meta があれば short_pitch_ja）
  *  - 配信向けバッジ最大3つ
  *  - 英語ハードル（あれば）
- *  - ro-bro.jp ロゴテキスト
+ *  - ロブランキング（非公式）ロゴテキスト
  *
  * キャッシュ：1h、SWR 24h
  */
@@ -103,7 +103,7 @@ export async function GET(_req: Request, props: { params: Promise<{ universeId: 
             opacity: 0.7,
           }}
         >
-          <div>robro.jp — 配信ネタまとめ</div>
+          <div>ロブランキング（非公式）— 配信ネタまとめ</div>
           {englishBarrier && (
             <div
               style={{

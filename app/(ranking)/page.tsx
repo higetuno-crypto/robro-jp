@@ -26,16 +26,16 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: 'みんなで作る日本ランキング',
   description:
-    'ro-brojp は日本ユーザーの「推し」投票で立ち上げる Roblox ゲームランキング。あなたの一票で日本人向けランキングが完成します。',
+    'ロブランキング（非公式）は日本ユーザーの「推し」投票で立ち上げる Roblox ゲームランキング。あなたの一票で日本人向けランキングが完成します。',
   alternates: { canonical: 'https://ro-brojp.com/' },
   openGraph: {
-    title: 'みんなで作る日本ランキング | ro-brojp',
+    title: 'みんなで作る日本ランキング | ロブランキング',
     description:
       '日本ユーザーの推し投票で作る Roblox ゲームランキング。あなたの一票で完成に近づきます。',
     url: 'https://ro-brojp.com/',
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'ro-brojp',
+    siteName: 'ロブランキング',
   },
 };
 
@@ -72,7 +72,7 @@ export default async function JapanPopularRankingPage() {
     <section>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <WelcomeStrip />
       <BuildJapanRankingHero progress={progress} />

@@ -46,7 +46,7 @@ export async function GET(_req: Request, props: { params: Promise<{ slug: string
         <div
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 22, opacity: 0.7 }}
         >
-          <div>robro-jp — タグで Roblox を探す</div>
+          <div>ロブランキング（非公式）— タグで Roblox を探す</div>
           <div style={{ display: 'flex', border: '2px solid #f5f5f5', padding: '6px 14px', fontSize: 22 }}>
             {isOfficial ? '公式タグ' : 'ユーザータグ'}
           </div>
@@ -82,7 +82,7 @@ export async function GET(_req: Request, props: { params: Promise<{ slug: string
         </div>
 
         <div style={{ display: 'flex', fontSize: 22, opacity: 0.65 }}>
-          日本人向け Roblox 発見サイト ro-brojp.com
+          日本人向け Roblox 発見サイト ロブランキング（ro-brojp.com）
         </div>
       </div>
     ),

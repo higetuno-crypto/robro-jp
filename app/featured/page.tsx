@@ -26,7 +26,7 @@ export default async function FeaturedPage() {
   const itemListLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'ro-brojp ピックアップ',
+    name: 'ロブランキング ピックアップ',
     numberOfItems: items.length,
     itemListElement: items.map((it, i) => ({
       '@type': 'ListItem',
@@ -40,7 +40,7 @@ export default async function FeaturedPage() {
     <main className="max-w-3xl mx-auto px-3 py-4">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <h1 className="text-[16px] font-semibold">ピックアップ</h1>
       <p className="text-[13px] text-muted-foreground mt-1">

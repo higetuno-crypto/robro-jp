@@ -10,13 +10,13 @@ export const metadata: Metadata = {
     '世界全体で今プレイされている Roblox ゲームを同時接続数（CCU）順で一覧。日本で人気のタイトルとの違いを比べたい人向け。',
   alternates: { canonical: 'https://ro-brojp.com/global' },
   openGraph: {
-    title: '全世界総合 Roblox ゲームランキング | ro-brojp',
+    title: '全世界総合 Roblox ゲームランキング | ロブランキング',
     description:
       '世界全体で今プレイされている Roblox ゲームを同時接続数（CCU）順で一覧。',
     url: 'https://ro-brojp.com/global',
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'ro-brojp',
+    siteName: 'ロブランキング',
   },
 };
 

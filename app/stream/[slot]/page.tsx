@@ -29,7 +29,7 @@ export async function generateMetadata(
     description: desc,
     alternates: { canonical: `https://ro-brojp.com/stream/${params.slot}` },
     openGraph: {
-      title: `配信向け：${name} | ro-brojp`,
+      title: `配信向け：${name} | ロブランキング`,
       description: desc,
       url: `https://ro-brojp.com/stream/${params.slot}`,
       type: 'website',
@@ -68,7 +68,7 @@ export default async function StreamSlotPage(
     <section className="max-w-3xl mx-auto px-3 py-3">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <div className="text-[13px] text-muted-foreground mb-2">
         <Link href="/stream" className="hover:underline">

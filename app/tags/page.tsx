@@ -88,7 +88,7 @@ export default async function TagsIndexPage(
     <main className="max-w-3xl mx-auto px-3 py-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <header className="mb-4">
         <h1 className="text-[18px] font-semibold">タグ一覧</h1>

@@ -37,7 +37,7 @@ export default async function StreamHubPage() {
     <section className="max-w-3xl mx-auto px-3 py-3">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <header className="mb-4">
         <h1 className="text-[18px] font-semibold">今夜の配信ネタを探す</h1>

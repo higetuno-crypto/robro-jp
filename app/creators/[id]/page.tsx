@@ -28,7 +28,7 @@ export async function generateMetadata(
     description: desc,
     alternates: { canonical: url },
     openGraph: {
-      title: `${pub.display_name} | ro-brojp`,
+      title: `${pub.display_name} | ロブランキング`,
       description: desc,
       url,
       type: 'profile',
@@ -102,7 +102,7 @@ export default async function CreatorDetailPage(props: PageProps) {
       {personLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd).replace(/</g, '\\u003c') }}
         />
       )}
       {!isPublic && canPreview ? (

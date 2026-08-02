@@ -40,13 +40,13 @@ export async function generateMetadata(
     description: desc,
     alternates: { canonical: url },
     openGraph: {
-      title: `#${tag.tagName} | ro-brojp`,
+      title: `#${tag.tagName} | ロブランキング`,
       description: desc,
       url,
       type: 'website',
       images: [{ url: ogImage, width: 1200, height: 630 }],
       locale: 'ja_JP',
-      siteName: 'ro-brojp',
+      siteName: 'ロブランキング',
     },
     twitter: {
       card: 'summary_large_image',
@@ -96,7 +96,7 @@ export default async function TagDetailPage(
     <main className="max-w-3xl mx-auto px-3 py-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd).replace(/</g, '\\u003c') }}
       />
       <nav className="text-[12px] text-muted-foreground mb-3">
         <Link href="/tags" className="hover:underline">

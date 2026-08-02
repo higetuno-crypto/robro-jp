@@ -10,13 +10,13 @@ export const metadata: Metadata = {
     '直近で同時接続数（CCU）が急増している Roblox ゲームを変動率で抽出。今ノってきている話題作をリアルタイムで追える。',
   alternates: { canonical: 'https://ro-brojp.com/trending' },
   openGraph: {
-    title: '急上昇 Roblox ゲームランキング | ro-brojp',
+    title: '急上昇 Roblox ゲームランキング | ロブランキング',
     description:
       '直近で同時接続数（CCU）が急増している Roblox ゲームを変動率で抽出。',
     url: 'https://ro-brojp.com/trending',
     type: 'website',
     locale: 'ja_JP',
-    siteName: 'ro-brojp',
+    siteName: 'ロブランキング',
   },
 };
 
