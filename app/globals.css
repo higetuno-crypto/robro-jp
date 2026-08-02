@@ -57,3 +57,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /*
+    広告が配信されなかった枠は、ラベル・区切り線ごと畳む。
+    AdSense はビューポート外の未配信ユニットしか自動で折りたたまないため、
+    これが無いと「📢 広告」ラベルと予約高さ(minHeight)の空白だけが残る。
+    Google 公式が案内している data-ad-status="unfilled" を使う。
+  */
+  .ad-slot:has(ins.adsbygoogle[data-ad-status='unfilled']) {
+    display: none !important;
+  }
+}

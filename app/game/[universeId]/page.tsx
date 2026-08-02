@@ -16,6 +16,8 @@ import { formatNumber, formatRelativeJa } from '@/lib/format';
 import { ReportButton } from '@/components/ReportButton';
 import { fetchTips, fetchTipPrompts, buildTipsFaqLd } from '@/lib/strategy-tips';
 import { StrategyTips } from '@/components/strategy/StrategyTips';
+import { AdSlot } from '@/components/AdSlot';
+import { AD_SLOTS } from '@/lib/ads';
 
 /**
  * 個別ゲーム詳細ページ
@@ -69,13 +71,13 @@ export async function generateMetadata(
     description: desc,
     alternates: { canonical: url },
     openGraph: {
-      title: `${titleBase} | ro-brojp`,
+      title: `${titleBase} | ロブランキング`,
       description: desc,
       url,
       type: 'article',
       images: [{ url: ogImage, width: 1200, height: 630 }],
       locale: 'ja_JP',
-      siteName: 'ro-brojp',
+      siteName: 'ロブランキング',
     },
     twitter: {
       card: 'summary_large_image',
@@ -203,11 +205,11 @@ export default async function GameDetailPage(
     <section className="max-w-3xl mx-auto px-3 py-3">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd).replace(/</g, '\\u003c') }}
       />
       {/* 攻略Tips の FAQPage 構造化データ。ユーザー投稿本文が入るため、script 終了タグによるブレイクアウト防止に < を < へエスケープ */}
       {faqLd && (
@@ -324,6 +326,11 @@ export default async function GameDetailPage(
           prompts={strategyTipPrompts}
         />
       )}
+      {/*
+        広告枠#2：概要（説明文）と CCU グラフの間（CLAUDE.md フェーズ12 の既定配置）。
+        スロットID未設定時は AdSlot 側で何も描画しない。
+      */}
+      <AdSlot slot={AD_SLOTS.gameDetail} minHeight={100} className="mt-6" />
       {/* 現在CCU */}
       <div className="mt-5 flex items-baseline gap-2">
         <div className="text-[13px] text-muted-foreground">現在CCU</div>

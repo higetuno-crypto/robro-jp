@@ -20,6 +20,16 @@ export function SiteFooter() {
           ゲーム情報は Roblox の公開データを元に独自に編集しています。
           「Roblox」は Roblox Corporation の商標です。
         </p>
+        {/*
+          必須UI表記#4（CLAUDE.md「E. AdSense 広告枠」）：
+          広告収益で運営していること、および広告主と表示順位が無関係であることの明示。
+          ランキングを聖域として守るための透明性表記。
+        */}
+        <p>
+          サイト運営は広告収益で賄われています。広告主と表示順位は無関係です。
+          本サイトの広告は ro-brojp が外部広告配信事業者を通じて掲載しているものであり、
+          Roblox 公式広告ではありません。
+        </p>
         <nav className="flex flex-wrap gap-x-4 gap-y-1">
           <Link href="/guide" className="hover:underline">
             このサイトの使い方

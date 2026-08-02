@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { FeedbackFab } from "@/components/FeedbackFab";
-
-const ADSENSE_CLIENT_ID = 'ca-pub-5811589837476935';
+import { FooterAd } from "@/components/FooterAd";
+import { ADSENSE_CLIENT_ID } from "@/lib/ads";
 
 /**
  * 日本語ファースト設計のため、本文フォントは Noto Sans JP を採用。
@@ -25,10 +25,10 @@ const notoSansJP = Noto_Sans_JP({
 export const metadata: Metadata = {
   metadataBase: new URL('https://ro-brojp.com'),
   title: {
-    default: 'ro-brojp｜Roblox ゲーム非公式まとめwiki（日本語）',
-    template: '%s | ro-brojp',
+    default: 'ロブランキング｜Roblox ゲーム非公式まとめwiki（日本語）',
+    template: '%s | ロブランキング',
   },
-  description: 'Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式情報サイト。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
+  description: 'ロブランキングは、Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式まとめwiki。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
 };
 
 /**
@@ -66,12 +66,12 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'WebSite',
-              name: 'ro-brojp',
-              alternateName: 'Roblox ゲーム非公式まとめwiki（日本語）',
+              name: 'ロブランキング',
+              alternateName: ['ro-brojp', 'Roblox ゲーム非公式まとめwiki（日本語）'],
               url: 'https://ro-brojp.com',
               inLanguage: 'ja',
               description:
-                'Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式情報サイト。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
+                'ロブランキングは、Roblox ゲームの日本語での遊び方・概要・人気ランキングをまとめる非公式まとめwiki。英語が苦手でも楽しめる日本語向けゲームが見つかります。',
               potentialAction: {
                 '@type': 'SearchAction',
                 target: 'https://ro-brojp.com/search?q={search_term_string}',
@@ -82,6 +82,12 @@ export default function RootLayout({
         />
         <SiteHeader />
         {children}
+        {/*
+          広告枠#1：フッター直上（CLAUDE.md フェーズ12 の既定配置）。
+          ファーストビューを圧迫せず、ランキング行間にも挟まらない位置。
+          コンテンツページ判定（/admin・404・エラーを除外）は FooterAd 側で行う。
+        */}
+        <FooterAd />
         <SiteFooter />
         <FeedbackFab />
       </body>
