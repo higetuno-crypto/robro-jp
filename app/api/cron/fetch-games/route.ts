@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { authorizeCron } from '@/lib/cron-auth';
 import { createServiceClient } from '@/lib/supabase';
 import { fetchTopUniverseIds } from '@/lib/roblox-explore-api';
 import { fetchGameDetails } from '@/lib/roblox-api';
@@ -29,9 +30,7 @@ const FETCH_LIMIT = 500;
 
 export async function GET(request: Request) {
   // ====== 認証 ======
-  const authHeader = request.headers.get('authorization') ?? '';
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
-  if (!process.env.CRON_SECRET || authHeader !== expected) {
+  if (!authorizeCron(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

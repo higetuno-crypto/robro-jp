@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeCron } from '@/lib/cron-auth';
 import { createServiceClient } from '@/lib/supabase';
 import { calcTagArtisanTier, EARLY_ACCESS_DEADLINE } from '@/lib/badges';
 
@@ -21,9 +22,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? '';
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!authorizeCron(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

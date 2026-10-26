@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeCron } from '@/lib/cron-auth';
 import { createServiceClient } from '@/lib/supabase';
 
 /**
@@ -19,9 +20,7 @@ const SPAM_WINDOW_MIN = 5;
 const SPAM_THRESHOLD = 5; // 同 fingerprint × universe_id で5分以内に5票以上
 
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? '';
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!authorizeCron(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

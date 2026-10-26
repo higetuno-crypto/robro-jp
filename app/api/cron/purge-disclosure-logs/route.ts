@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { authorizeCron } from '@/lib/cron-auth';
 import { createServiceClient } from '@/lib/supabase';
 
 /**
@@ -19,9 +20,7 @@ export const maxDuration = 60;
 const RETENTION_DAYS = 90;
 
 export async function GET(request: Request) {
-  const auth = request.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ''}`;
-  if (!process.env.CRON_SECRET || auth !== expected) {
+  if (!authorizeCron(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
