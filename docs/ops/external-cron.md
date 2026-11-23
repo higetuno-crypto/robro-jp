@@ -100,34 +100,41 @@ Vercel → Project Settings → Environment Variables に `CRON_SECRET_EXTERNAL`
 
    | 項目 | 値 |
    |---|---|
-   | Title | `robro-jp fetch-games` |
+   | タイトル | `robro-jp fetch-games` |
    | URL | `https://www.ro-brojp.com/api/cron/fetch-games` |
-   | Execution schedule | **Every 10 minutes**（Custom → `*/10`） |
+   | スケジュール | 10 分ごと（定義済みスケジュールか、カスタムで `*/10`） |
+   | リクエストメソッド | `GET` |
+   | カスタムヘッダ | `Authorization: Bearer <CRON_SECRET_EXTERNAL の値>` |
 
-3. **Advanced** タブを開いて以下を設定（ここが肝）
-
-   | 項目 | 値 |
-   |---|---|
-   | Request method | `GET` |
-   | Headers | `Authorization: Bearer <CRON_SECRET_EXTERNAL の値>` |
-   | Request timeout | `60` 秒（`fetch-games` は実測 5〜8 秒だが Roblox API 次第で伸びる） |
-   | Treat redirects as success | **off** |
-   | Expected status codes | `200` |
+   画面上の項目名は UI 更新で変わりうる。公式 FAQ で確認できたのは「リクエストメソッド・ヘッダ・ボディを設定できる」「任意のカスタムヘッダに対応（`User-Agent` と `Connection` だけは無視される）」まで。
 
    > **URL は必ず `www.` 付きで登録する。** apex（`ro-brojp.com`）は www へ 307 リダイレクトされ、リダイレクト時に `Authorization` ヘッダが落ちて 401 になる。
 
-4. **Save** → 一覧の **Execute now** で即実行し、**History** で `200` と
-   `{"ok":true,"fetched":...}` が返ることを確認
+3. 保存して実行させ、ジョブの実行履歴で `200` と `{"ok":true,"fetched":...}` が返ることを確認
 
-5. 残り 3 本を同様に作る（間隔と method を上表に合わせる）
+4. 残り 3 本を同様に作る（間隔と method を上表に合わせる）。
+   `award-badges` は**タイムゾーンの設定に注意**（JST なら 04:00、UTC なら 19:00）
 
-6. **Settings → Notifications** で失敗時メール通知を on にする
-   （GitHub Actions の停止に気づけなかった原因は通知が無かったことなので、ここは必ず設定する）
+5. 失敗時のメール通知を on にする（「失敗した時」と「失敗から復帰した時」の通知がある）。
+   GitHub Actions の停止に 23 日気づけなかった原因は通知が無かったことなので、ここは必ず設定する
 
-### 注意点
+### 公式 FAQ で確認した制約（2026-11-23 時点）
 
-- 無料枠では実行履歴の保持期間が短い。長期の観測が必要なら Vercel 側のログを見る
-- secret が third-party の管理画面に保存される。これが気になる場合は選択肢 B
+- **タイムアウトは 30 秒固定**。`fetch-games` は実測 5〜8 秒なので収まるが、Roblox API が遅いと超える可能性はある
+- 最短間隔は 1 分（1 時間 60 回まで）
+- 実行履歴は直近 50 回分、レスポンスのヘッダと本文は 2 日間保存。長期の観測は Vercel 側のログで
+- **失敗が 25 回を超えるとジョブは自動で無効化される**（FAQ の表現は "subsequently fails more than 25 times"）。過去に失敗の多いジョブは意図的に遅延されることもある
+- 送信元 IP は固定（一覧は <https://api.cron-job.org/executor-nodes.json>）。IP 制限をかける場合に使える
+- カスタムヘッダの値（＝ secret）が暗号化保存されるかは FAQ に記載がない。気になる場合は選択肢 B
+
+### 既知の注意：Roblox の 429 が失敗として数えられる
+
+`fetch-games` は Roblox API が 429 を返すと HTTP 500 を返す（2026-11-20〜23 の実測で、`fetch-games` の直近 8 回中 2 回）。cron-job.org はこれを失敗として数えるため、
+
+- 失敗通知が頻繁に届き、本当の停止が埋もれる
+- 失敗の多いジョブとして遅延・自動無効化の対象になりうる
+
+末尾の「既知の未解決事項」を直すまでは、通知が来ても 429 かどうかを本文で見分ける必要がある。
 
 ---
 
