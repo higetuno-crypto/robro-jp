@@ -51,6 +51,51 @@ export interface GameWithThumbnail extends RobloxGameDetail {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+// ====== 429 の扱い ======
+// Roblox の非 Open Cloud API は rate limit が非公開で、ときどき 429 を返す
+// （2026-11 実測で fetch-games の 2〜3 割）。CLAUDE.md「429 を正常系として扱い、
+// 指数バックオフ＋jitter」に従い、429 は少し待って再試行し、それでもダメなら
+// RobloxRateLimitError を投げる。呼び出し側（cron）は「今回は見送り」として扱い、
+// 何も書き込まない。
+//   ※ 書き込まないことが重要：サムネや日本語名が取れないまま upsert すると、
+//     既存の thumbnail_url / name_ja が null で上書きされて表示から消える。
+// 待ち時間の上限は外部スケジューラのタイムアウト（cron-job.org は 30 秒固定）に収める。
+const RATE_LIMIT_MAX_RETRIES = 2;
+const RATE_LIMIT_BASE_DELAY_MS = 1000;
+const RATE_LIMIT_MAX_DELAY_MS = 5000;
+
+export class RobloxRateLimitError extends Error {
+  constructor(url: string) {
+    super(
+      `Roblox API rate limited (429) after ${RATE_LIMIT_MAX_RETRIES} retries: ${new URL(url).pathname}`
+    );
+    this.name = 'RobloxRateLimitError';
+  }
+}
+
+async function fetchRoblox(url: string, init: RequestInit): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, init);
+    if (res.status !== 429) return res;
+    // 429 の本文（数十バイト）は読み捨てて接続を解放する。
+    // res.body.cancel() は使わないこと：Next.js の fetch パッチはレスポンスを複製（tee）
+    // しており、tee の片側だけを cancel するともう片側が cancel されるまで解決せず、
+    // route がログも出さずに止まる（2026-11-23 にローカルで実際に発生）。
+    await res.text().catch(() => '');
+    if (attempt >= RATE_LIMIT_MAX_RETRIES) throw new RobloxRateLimitError(url);
+    // Retry-After（秒）があれば尊重しつつ上限で切り、jitter で再試行の重なりを避ける
+    const retryAfterMs = Number(res.headers.get('retry-after')) * 1000;
+    const backoffMs = RATE_LIMIT_BASE_DELAY_MS * 2 ** attempt;
+    const waitMs =
+      Math.min(
+        RATE_LIMIT_MAX_DELAY_MS,
+        Math.max(backoffMs, Number.isFinite(retryAfterMs) ? retryAfterMs : 0)
+      ) +
+      Math.random() * (RATE_LIMIT_BASE_DELAY_MS / 2);
+    await sleep(waitMs);
+  }
+}
+
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -59,7 +104,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 
 async function fetchGamesBatch(universeIds: number[]): Promise<RobloxGameDetail[]> {
   const url = `${GAMES_DETAIL_URL}?universeIds=${universeIds.join(',')}`;
-  const res = await fetch(url, {
+  const res = await fetchRoblox(url, {
     cache: 'no-store',
     headers: {
       'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
@@ -79,7 +124,7 @@ async function fetchThumbnailsBatch(
   const url =
     `${THUMBNAIL_URL}?universeIds=${universeIds.join(',')}` +
     `&size=150x150&format=Png&isCircular=false`;
-  const res = await fetch(url, {
+  const res = await fetchRoblox(url, {
     cache: 'no-store',
     headers: {
       'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
@@ -110,7 +155,7 @@ async function fetchJapaneseNames(
 ): Promise<Map<number, string>> {
   try {
     const url = `${GAMES_DETAIL_URL}?universeIds=${universeIds.join(',')}`;
-    const res = await fetch(url, {
+    const res = await fetchRoblox(url, {
       cache: 'no-store',
       headers: {
         'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
@@ -131,6 +176,8 @@ async function fetchJapaneseNames(
     }
     return map;
   } catch (err) {
+    // 429 は「見送り」の判断を呼び出し側に任せる（null で上書きさせない）
+    if (err instanceof RobloxRateLimitError) throw err;
     console.error('Roblox games API (ja-jp) fetch error:', err);
     return new Map();
   }
@@ -148,12 +195,13 @@ export async function fetchGameDetails(
 
   for (let i = 0; i < batches.length; i++) {
     const ids = batches[i];
-    // 詳細・サムネ・日本語名を並列で取得（同じバッチ内なので公式APIへの同時負荷は3req）
-    const [details, thumbs, jaNames] = await Promise.all([
+    // 詳細（英語）とサムネは別ホストなので並列で取る。日本語名は詳細と同じ
+    // games.roblox.com を叩くので、同時に 2 本投げず詳細の後に回す（429 を誘発しにくくする）
+    const [details, thumbs] = await Promise.all([
       fetchGamesBatch(ids),
       fetchThumbnailsBatch(ids),
-      fetchJapaneseNames(ids),
     ]);
+    const jaNames = await fetchJapaneseNames(ids);
 
     for (const d of details) {
       results.push({

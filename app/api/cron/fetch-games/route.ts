@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { authorizeCron } from '@/lib/cron-auth';
 import { createServiceClient } from '@/lib/supabase';
 import { fetchTopUniverseIds } from '@/lib/roblox-explore-api';
-import { fetchGameDetails } from '@/lib/roblox-api';
+import { fetchGameDetails, RobloxRateLimitError } from '@/lib/roblox-api';
 import { detectJapanese } from '@/lib/japanese-detector';
 
 /**
@@ -102,6 +102,18 @@ export async function GET(request: Request) {
       capturedAt,
     });
   } catch (err) {
+    // Roblox の 429 は正常系（CLAUDE.md）。今回は何も書かずに見送り、次の実行で追いつく。
+    // 200 で返すのは、スケジューラに「失敗」と数えさせないため
+    // （cron-job.org は失敗が 25 回を超えるとジョブを自動停止する）。
+    // 見送りが続いていないかは、トップの「N分前更新」で見る。
+    if (err instanceof RobloxRateLimitError) {
+      console.warn('[cron fetch-games] skipped:', err.message);
+      return NextResponse.json({
+        ok: false,
+        skipped: 'roblox_rate_limited',
+        elapsedMs: Date.now() - startedAt,
+      });
+    }
     console.error('[cron fetch-games] error:', err);
     return NextResponse.json(
       {

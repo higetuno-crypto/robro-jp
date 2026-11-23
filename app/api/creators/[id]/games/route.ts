@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/supabase-ssr';
 import { getCreatorById } from '@/lib/creators';
-import { fetchGameDetails } from '@/lib/roblox-api';
+import { fetchGameDetails, RobloxRateLimitError, type GameWithThumbnail } from '@/lib/roblox-api';
 import { parseRobloxPlaceIdFromGameUrl } from '@/lib/roblox-game-url';
 import {
   resolvePlaceIdToUniverseId,
@@ -134,7 +134,23 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     genreSlug: string | null;
   } | null = null;
 
-  const fetched = await fetchGameDetails([universeId]);
+  let fetched: GameWithThumbnail[];
+  try {
+    fetched = await fetchGameDetails([universeId]);
+  } catch (e) {
+    // サムネ・日本語名が欠けたまま新規行を作ると、ランキング外のゲームは cron が
+    // 取り直さないため欠けたままになる。中途半端に保存せず、再試行してもらう。
+    if (e instanceof RobloxRateLimitError) {
+      return NextResponse.json(
+        {
+          error: 'roblox_rate_limited',
+          hint: 'Roblox 側が混み合っています。少し時間をおいてから、もう一度お試しください。',
+        },
+        { status: 503 }
+      );
+    }
+    throw e;
+  }
   if (fetched && fetched.length > 0) {
     const g = fetched[0];
     creatorInfo = g.creator
