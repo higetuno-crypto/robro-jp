@@ -34,3 +34,27 @@ export function createServiceClient(): SupabaseClient {
     auth: { persistSession: false },
   });
 }
+
+/**
+ * 一括 upsert で「値が undefined の列は送らない（＝既存値を残す）」ための下ごしらえ。
+ * 行から undefined のキーを消し、送る列の組み合わせが同じ行ごとに束ねて返す。
+ * 呼び出し側は束ごとに upsert する。
+ *
+ * なぜ束ねる必要があるか：postgrest-js の upsert は配列を渡すと、全行のキーの和集合を
+ * columns に指定する（Object.keys なので値が undefined のキーも数える）。一方 JSON 本文からは
+ * undefined のキーが落ちるため、どこか 1 行でも欠けた列は NULL 扱いになり、
+ * ON CONFLICT で既存値が NULL に上書きされる（@supabase/postgrest-js 2.104.0 で確認）。
+ */
+export function groupRowsByColumns<T extends Record<string, unknown>>(rows: T[]): Partial<T>[][] {
+  const groups = new Map<string, Partial<T>[]>();
+  for (const row of rows) {
+    const clean = Object.fromEntries(
+      Object.entries(row).filter(([, v]) => v !== undefined)
+    ) as Partial<T>;
+    const key = Object.keys(clean).sort().join(',');
+    const group = groups.get(key);
+    if (group) group.push(clean);
+    else groups.set(key, [clean]);
+  }
+  return [...groups.values()];
+}

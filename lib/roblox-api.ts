@@ -44,9 +44,13 @@ interface ThumbnailResponse {
 
 /** Rolimonsから貰ったUniverseIdで公式APIを叩き、詳細とサムネを取得 */
 export interface GameWithThumbnail extends RobloxGameDetail {
-  thumbnailUrl: string | null;
-  /** Roblox の ja-jp ロケール名（Roblox公式が日本で表示する名前）。取れなければ null */
-  name_ja: string | null;
+  /** サムネ URL。画像が無ければ null、取得自体に失敗したら undefined（＝既存値を上書きしない） */
+  thumbnailUrl: string | null | undefined;
+  /**
+   * Roblox の ja-jp ロケール名（Roblox公式が日本で表示する名前）。
+   * 日本語名が無ければ null、取得自体に失敗したら undefined（＝既存値を上書きしない）
+   */
+  name_ja: string | null | undefined;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -54,11 +58,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // ====== 429 の扱い ======
 // Roblox の非 Open Cloud API は rate limit が非公開で、ときどき 429 を返す
 // （2026-11 実測で fetch-games の 2〜3 割）。CLAUDE.md「429 を正常系として扱い、
-// 指数バックオフ＋jitter」に従い、429 は少し待って再試行し、それでもダメなら
-// RobloxRateLimitError を投げる。呼び出し側（cron）は「今回は見送り」として扱い、
-// 何も書き込まない。
-//   ※ 書き込まないことが重要：サムネや日本語名が取れないまま upsert すると、
-//     既存の thumbnail_url / name_ja が null で上書きされて表示から消える。
+// 指数バックオフ＋jitter」に従い、429 は少し待って再試行する。それでもダメな時：
+//   - 詳細（英語）… CCU が取れないので RobloxRateLimitError を投げ、cron は見送る
+//   - サムネ・日本語名 … 付加情報なので undefined（＝取得失敗）を返して続行する。
+//     CCU スナップショットはそのまま書き、呼び出し側はこの 2 列の既存値を残す。
+//     （null で返すと「画像・日本語名が無い」と区別できず、既存値を null で上書きして
+//       表示から消してしまう。旧実装はこれをやっていた）
 // 待ち時間の上限は外部スケジューラのタイムアウト（cron-job.org は 30 秒固定）に収める。
 const RATE_LIMIT_MAX_RETRIES = 2;
 const RATE_LIMIT_BASE_DELAY_MS = 1000;
@@ -118,23 +123,30 @@ async function fetchGamesBatch(universeIds: number[]): Promise<RobloxGameDetail[
   return json.data ?? [];
 }
 
+/** 取得に失敗したら null（＝このバッチのサムネは不明。呼び出し側は既存値を残す） */
 async function fetchThumbnailsBatch(
   universeIds: number[]
-): Promise<Map<number, string | null>> {
+): Promise<Map<number, string | null> | null> {
   const url =
     `${THUMBNAIL_URL}?universeIds=${universeIds.join(',')}` +
     `&size=150x150&format=Png&isCircular=false`;
-  const res = await fetchRoblox(url, {
-    cache: 'no-store',
-    headers: {
-      'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
-      Accept: 'application/json',
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetchRoblox(url, {
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'robro-jp/0.2 (+https://ro-brojp.com/)',
+        Accept: 'application/json',
+      },
+    });
+  } catch (err) {
+    // サムネは取れなくても致命ではない（429 を再試行しきった場合も含む）
+    console.error('Roblox thumbnail API fetch error:', err instanceof Error ? err.message : err);
+    return null;
+  }
   if (!res.ok) {
-    // サムネは取れなくても致命ではないので空で返す
     console.error(`Roblox thumbnail API error: ${res.status}`);
-    return new Map();
+    return null;
   }
   const json = (await res.json()) as ThumbnailResponse;
   const map = new Map<number, string | null>();
@@ -147,12 +159,12 @@ async function fetchThumbnailsBatch(
 /**
  * ja-jp ロケールで games API を叩き、日本語名だけを取り出す。
  * Roblox は公式に Accept-Language ヘッダで実験名/説明をロケール化する。
- * 日本語名は表示用の付加情報なので、失敗しても致命とせず空 Map を返す
- * （呼び出し側は英語 name にフォールバックする）。
+ * 日本語名は表示用の付加情報なので、失敗しても致命とせず null（＝このバッチの
+ * 日本語名は不明）を返す。呼び出し側は既存値を残し、表示は英語 name にフォールバックする。
  */
 async function fetchJapaneseNames(
   universeIds: number[]
-): Promise<Map<number, string>> {
+): Promise<Map<number, string> | null> {
   try {
     const url = `${GAMES_DETAIL_URL}?universeIds=${universeIds.join(',')}`;
     const res = await fetchRoblox(url, {
@@ -165,7 +177,7 @@ async function fetchJapaneseNames(
     });
     if (!res.ok) {
       console.error(`Roblox games API (ja-jp) error: ${res.status}`);
-      return new Map();
+      return null;
     }
     const json = (await res.json()) as GamesDetailResponse;
     const map = new Map<number, string>();
@@ -176,16 +188,15 @@ async function fetchJapaneseNames(
     }
     return map;
   } catch (err) {
-    // 429 は「見送り」の判断を呼び出し側に任せる（null で上書きさせない）
-    if (err instanceof RobloxRateLimitError) throw err;
-    console.error('Roblox games API (ja-jp) fetch error:', err);
-    return new Map();
+    // 429 を再試行しきった場合も含む
+    console.error('Roblox games API (ja-jp) fetch error:', err instanceof Error ? err.message : err);
+    return null;
   }
 }
 
 /**
  * UniverseIdのリストから、ゲーム詳細＋サムネ＋日本語名をまとめて取得する
- * 100件ずつバッチ、バッチ間500msディレイ
+ * BATCH_SIZE 件ずつバッチ、バッチ間 BATCH_DELAY_MS ディレイ
  */
 export async function fetchGameDetails(
   universeIds: number[]
@@ -206,8 +217,9 @@ export async function fetchGameDetails(
     for (const d of details) {
       results.push({
         ...d,
-        thumbnailUrl: thumbs.get(d.id) ?? null,
-        name_ja: jaNames.get(d.id) ?? null,
+        // バッチの取得に失敗していたら undefined（既存値を残す）、取れていて無ければ null
+        thumbnailUrl: thumbs ? (thumbs.get(d.id) ?? null) : undefined,
+        name_ja: jaNames ? (jaNames.get(d.id) ?? null) : undefined,
       });
     }
 

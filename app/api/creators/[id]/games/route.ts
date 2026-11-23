@@ -138,8 +138,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
   try {
     fetched = await fetchGameDetails([universeId]);
   } catch (e) {
-    // サムネ・日本語名が欠けたまま新規行を作ると、ランキング外のゲームは cron が
-    // 取り直さないため欠けたままになる。中途半端に保存せず、再試行してもらう。
+    // 詳細（英語）が 429 を再試行しきった時だけここに来る。ゲームの存在と作者を
+    // 確かめられないので登録できない。素の 500 にせず、再試行を案内する。
     if (e instanceof RobloxRateLimitError) {
       return NextResponse.json(
         {
@@ -159,10 +159,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     gameMeta = {
       universeId: g.id,
       name: g.name,
-      nameJa: g.name_ja,
+      nameJa: g.name_ja ?? null,
       description: g.description,
       rootPlaceId: g.rootPlaceId,
-      thumbnailUrl: g.thumbnailUrl,
+      thumbnailUrl: g.thumbnailUrl ?? null,
       genreL1: g.genre_l1 ?? null,
       genreSlug: g.untranslated_genre_l1 ?? null,
     };

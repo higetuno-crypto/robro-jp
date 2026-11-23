@@ -1,22 +1,26 @@
 /**
- * lib/roblox-api.ts の 429 処理の自己検査（ネットワークに出ない）。
+ * lib/roblox-api.ts の 429 処理と、cron の upsert 下ごしらえの自己検査（ネットワークに出ない）。
  *
  *   npx -y tsx scripts/check-roblox-rate-limit.ts
  *
  * global fetch を差し替えて Roblox の 429 を再現し、次を確かめる：
  *   A. 429 が 2 回続いても 3 回目で取れれば普通に結果を返す
- *   B. 詳細 API が 429 のままなら RobloxRateLimitError（再試行は 2 回まで）
- *   C. 日本語名 API が 429 のままなら RobloxRateLimitError（null で黙って返さない）
- *   D. サムネ API が 429 のままなら RobloxRateLimitError（同上）
- *   E. 日本語名 API の 429 以外の失敗は従来どおり null で続行する
+ *   B. 詳細（英語）が 429 のままなら RobloxRateLimitError（再試行は 2 回まで）
+ *      → CCU が取れないので cron は見送る
+ *   C. 日本語名が 429 のままでも続行し、name_ja は undefined（＝既存値を残す）
+ *   D. サムネが 429 のままでも続行し、thumbnailUrl は undefined（同上）
+ *   E. 日本語名の 429 以外の失敗も undefined（旧実装は null で既存値を上書きしていた）
  *   F. Retry-After が長くても待ちは上限で切られる（cron-job.org の 30 秒枠を守る）
  *   G. 詳細（英語）と日本語名は同時に投げない
  *   H. Next.js の fetch パッチのように body が tee（複製）されていても、
  *      429 の再試行で止まらない（tee の片側だけ cancel するとハングする）
- * 再試行の待ちを実際に挟むので 20 秒ほどかかる。
+ *   I. groupRowsByColumns：undefined の列は送らず、列の組み合わせごとに束ねる
+ *      （postgrest-js の一括 upsert は欠けた列を NULL で上書きするため）
+ * 再試行の待ちを実際に挟むので 30 秒ほどかかる。
  */
 import assert from 'node:assert/strict';
 import { fetchGameDetails, RobloxRateLimitError } from '../lib/roblox-api';
+import { groupRowsByColumns } from '../lib/supabase';
 
 type Kind = 'en' | 'ja' | 'thumb';
 type Plan = Partial<Record<Kind, Array<number | { status: number; retryAfter?: string }>>>;
@@ -60,17 +64,13 @@ function install(plan: Plan) {
     if (s.status === 200) {
       return new Response(JSON.stringify(okBody[kind]), { status: 200 });
     }
-    // tee の片割れ b は誰も読まない＝Next.js 内で cache 用に保持される側の再現
+    // tee の片割れは誰も読まない＝Next.js 内で cache 用に保持される側の再現
     const body = teeBodies ? new Response('error').body!.tee()[0] : 'error';
     return new Response(body, {
       status: s.status,
       headers: s.retryAfter ? { 'retry-after': s.retryAfter } : {},
     });
   }) as typeof fetch;
-}
-
-async function expectRateLimit(label: string) {
-  await assert.rejects(fetchGameDetails([1]), RobloxRateLimitError, label);
 }
 
 async function main() {
@@ -86,25 +86,29 @@ async function main() {
 
   // B
   install({ en: [429, 429, 429, 429] });
-  await expectRateLimit('B');
+  await assert.rejects(fetchGameDetails([1]), RobloxRateLimitError, 'B');
   assert.equal(calls.en, 3, 'B: 再試行は 2 回で打ち切る');
   console.log('B ok');
 
   // C
   install({ ja: [429, 429, 429] });
-  await expectRateLimit('C');
+  const c = await fetchGameDetails([1]);
+  assert.equal(c[0].playing, 5, 'C: CCU は取れている');
+  assert.equal(c[0].name_ja, undefined, 'C: 日本語名は undefined（既存値を残す）');
+  assert.equal(c[0].thumbnailUrl, 'https://example.invalid/t.png', 'C: サムネは取れている');
   console.log('C ok');
 
   // D
   install({ thumb: [429, 429, 429] });
-  await expectRateLimit('D');
+  const d = await fetchGameDetails([1]);
+  assert.equal(d[0].thumbnailUrl, undefined, 'D: サムネは undefined（既存値を残す）');
+  assert.equal(d[0].name_ja, 'ゲーム', 'D: 日本語名は取れている');
   console.log('D ok');
 
   // E
   install({ ja: [500] });
   const e = await fetchGameDetails([1]);
-  assert.equal(e.length, 1, 'E: 結果は返る');
-  assert.equal(e[0].name_ja, null, 'E: 429 以外の失敗は従来どおり null');
+  assert.equal(e[0].name_ja, undefined, 'E: 429 以外の失敗も undefined');
   console.log('E ok');
 
   // F
@@ -125,6 +129,21 @@ async function main() {
   teeBodies = false;
   assert.equal(h, 'done', 'H: tee された body でも 429 の再試行が完了する');
   console.log('H ok');
+
+  // I
+  const groups = groupRowsByColumns([
+    { universe_id: 1, playing: 5, name_ja: undefined, thumbnail_url: 'a' },
+    { universe_id: 2, playing: 6, name_ja: 'に', thumbnail_url: 'b' },
+    { universe_id: 3, playing: 7, name_ja: undefined, thumbnail_url: 'c' },
+  ]);
+  assert.equal(groups.length, 2, 'I: 列の組み合わせは 2 通り');
+  const missing = groups.find((g) => g.some((r) => r.universe_id === 1));
+  assert.ok(missing, 'I: id=1 の束がある');
+  assert.deepEqual(missing.map((r) => r.universe_id), [1, 3], 'I: id=1 と 3 が同じ束');
+  assert.ok(missing.every((r) => !('name_ja' in r)), 'I: undefined の列はキーごと消える');
+  const full = groups.find((g) => g.some((r) => r.universe_id === 2));
+  assert.equal(full?.[0].name_ja, 'に', 'I: 値のある列は残る');
+  console.log('I ok');
 
   console.log('ALL OK');
 }

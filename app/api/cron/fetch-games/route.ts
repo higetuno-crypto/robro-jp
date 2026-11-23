@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { authorizeCron } from '@/lib/cron-auth';
-import { createServiceClient } from '@/lib/supabase';
+import { createServiceClient, groupRowsByColumns } from '@/lib/supabase';
 import { fetchTopUniverseIds } from '@/lib/roblox-explore-api';
 import { fetchGameDetails, RobloxRateLimitError } from '@/lib/roblox-api';
 import { detectJapanese } from '@/lib/japanese-detector';
@@ -53,6 +53,9 @@ export async function GET(request: Request) {
     const capturedAt = new Date().toISOString();
 
     const gameRows = games.map((g) => {
+      // 日本語名が取れなかったバッチ（undefined）は、日本語名で結果が変わる
+      // is_japanese 判定も正しく出せないので、3 列とも undefined＝既存値を残す
+      const jaKnown = g.name_ja !== undefined;
       const j = detectJapanese(g.name, g.description, g.name_ja);
       return {
         universe_id: g.id,
@@ -63,8 +66,8 @@ export async function GET(request: Request) {
         creator_name: g.creator?.name ?? null,
         creator_type: g.creator?.type ?? null,
         thumbnail_url: g.thumbnailUrl,
-        is_japanese: j.isJapanese,
-        japanese_score: j.score,
+        is_japanese: jaKnown ? j.isJapanese : undefined,
+        japanese_score: jaKnown ? j.score : undefined,
         genre_l1: g.genre_l1 ?? null,
         genre_slug: g.untranslated_genre_l1 ?? null,
         updated_at: capturedAt,
@@ -82,11 +85,14 @@ export async function GET(request: Request) {
     // ====== Supabase へ書き込み ======
     const supabase = createServiceClient();
 
-    // games は universe_id をキーに upsert（既存なら updated_at 等を上書き）
-    const { error: upsertErr } = await supabase
-      .from('games')
-      .upsert(gameRows, { onConflict: 'universe_id' });
-    if (upsertErr) throw upsertErr;
+    // games は universe_id をキーに upsert（既存なら updated_at 等を上書き）。
+    // 取得に失敗した列（undefined）は送らずに既存値を残すため、送る列の組み合わせごとに分けて書く
+    for (const rows of groupRowsByColumns(gameRows)) {
+      const { error: upsertErr } = await supabase
+        .from('games')
+        .upsert(rows, { onConflict: 'universe_id' });
+      if (upsertErr) throw upsertErr;
+    }
 
     // game_snapshots は (universe_id, captured_at) 複合PKに insert
     const { error: insertErr } = await supabase
@@ -98,6 +104,9 @@ export async function GET(request: Request) {
       ok: true,
       fetched: games.length,
       japanese: gameRows.filter((r) => r.is_japanese).length,
+      // 付加情報が取れず既存値を残した件数（Roblox の 429 の多さを観測するため）
+      jaUnknown: games.filter((g) => g.name_ja === undefined).length,
+      thumbUnknown: games.filter((g) => g.thumbnailUrl === undefined).length,
       elapsedMs: Date.now() - startedAt,
       capturedAt,
     });
